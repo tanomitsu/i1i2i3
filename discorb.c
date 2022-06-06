@@ -10,7 +10,7 @@
 
 int serverConnect(int port);
 int clientConnect(char *ip, int port);
-int process(int s);
+int call(int s);
 
 int main(int argc, char **argv) {
     // connect
@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
                 argv[0]);
         exit(1);
     }
-    process(s);
+    call(s);
     close(s);
 }
 
@@ -78,7 +78,7 @@ int clientConnect(char *ip, int port) {
     return s;
 }
 
-int process(int s) {
+int call(int s) {
     // start recording
     FILE *fp = popen("rec -t raw -b 16 -c 1 -e s -r 44100 -", "r");
 
