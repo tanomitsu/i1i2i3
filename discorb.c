@@ -9,8 +9,8 @@
 #define BUFSIZE 1024
 
 int serverConnect(int port);
-int clientConnect();
-int process();
+int clientConnect(char *ip, int port);
+int process(int s);
 
 int main(int argc, char **argv) {
     // connect
