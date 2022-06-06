@@ -1,3 +1,9 @@
+/*
+    使い方:
+        サーバー側: ./discorb.out <port>
+        クライアント: ./discorb.out <ip> <port>
+*/
+
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
