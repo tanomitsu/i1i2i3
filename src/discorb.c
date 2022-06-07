@@ -94,7 +94,7 @@ int call(int s) {
     fprintf(stderr, "Input what you want to send.\n");
     short sendBuf[BUFSIZE];
     short recvBuf[BUFSIZE];
-    complex double *Y_resista = calloc(sizeof(complex double), BUFSIZE);
+    complex double *Y_resista = calloc(BUFSIZE, sizeof(complex double));
     for (;;) {
         // send sound
         int sendNum = fread(sendBuf, sizeof(short), BUFSIZE, fp);
@@ -103,31 +103,14 @@ int call(int s) {
             perror("send");
             return 1;
         }
-        complex double *X = calloc(sizeof(complex double), BUFSIZE);
-        complex double *Y = calloc(sizeof(complex double), BUFSIZE);
+        complex double *X = calloc(BUFSIZE, sizeof(complex double));
+        complex double *Y = calloc(BUFSIZE, sizeof(complex double));
         /* 複素数の配列に変換 */
         sample_to_complex(sendBuf, X, BUFSIZE);
         /* FFT -> Y */
-        fft(X, Y, BUFSIZE);  // X=t-axis
-        /*
-        double limit=300;
-        double abs;
-        for(int i=0;i<BUFSIZE;i++){
-            abs=cabs(Y[i]);
-            if(abs>limit)Y[i]=Y[i]*limit/abs;
-        }
-
-        for(int i=0;i<BUFSIZE;i++){
-            double f=i/(double)BUFSIZE*44100;
-            if(f<100.0 || f>1000.0)Y[i]=0;
-        }
-        double max_amp=0;
-        double limit=400;
-        for(int i=0;i<BUFSIZE;i++){if(cabs(Y[i])>max_amp)max_amp=cabs(Y[i]);}
-        for(int i=0;i<BUFSIZE;i++){Y[i]=Y[i]/max_amp*limit;}
-        */
-       double para=0.75;
-        for(int i=0;i<BUFSIZE;i++)Y[i]-=para*Y_resista[i];
+        fft(X, Y, BUFSIZE);
+        double para = 0;
+        for (int i = 0; i < BUFSIZE; i++) Y[i] -= para * Y_resista[i];
         /* IFFT -> Z */
         ifft(Y, X, BUFSIZE);
         /* 標本の配列に変換 */
@@ -137,7 +120,7 @@ int call(int s) {
 
         // receive sound
         int recvNum = recv(s, recvBuf, sizeof(short) * BUFSIZE, 0);
-        complex double *X_resista = calloc(sizeof(complex double), BUFSIZE);
+        complex double *X_resista = calloc(BUFSIZE, sizeof(complex double));
         sample_to_complex(recvBuf, X_resista, BUFSIZE);
         fft(X_resista, Y_resista, BUFSIZE);
         write(1, recvBuf, recvNum);
