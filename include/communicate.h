@@ -5,4 +5,6 @@
 // sへのポインタを引数にとり、通話を行う
 int call(void *arg);
 
-int chat(void *arg);
+int sendChat(void *arg);
+
+int recvChat(void *arg);

@@ -1,7 +1,6 @@
+#include "communicate.h"
+
 #include <arpa/inet.h>
-#include <communicate.h>
-#include <connect.h>
-#include <fft.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
@@ -9,6 +8,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#include "connect.h"
+#include "fft.h"
+#include "visualize.h"
 
 int call(void *arg) {
     // parameters
@@ -73,6 +76,9 @@ int call(void *arg) {
         // save pre-received data for noise cancellation
         sample_to_complex(recvBuf, recvBeforeX, BUFSIZE);
         fft(recvBeforeX, recvBeforeY, BUFSIZE);
+
+        // clear screen
+        display();
     }
     fprintf(stderr, "Ended connection.\n");
     system("/bin/stty cooked");
@@ -81,16 +87,27 @@ int call(void *arg) {
     return 0;
 }
 
-int chat(void *arg) {
+int sendChat(void *arg) {
     // parameters
-    system("/bin/stty raw onlcr");
     int s = *((int *)arg);
-    char cmd = '\0';
+    char cmd[COMMAND_LEN];
     for (;;) {
-        cmd = getchar();
-        if (cmd == ':') break;  // チャット送信終了
-        for (int i = 0; i < 5; i++) printf("%c\r\n", cmd);
+        if (fgets(cmd, COMMAND_LEN, stdin) == NULL) break;  // チャット送信終了
+        if (cmd[0] == ':') break;  // チャット送信終了
+        printf("send: %s\n", cmd);
+        // 入力した文字を送信
+        send(s, &cmd, sizeof(char) * COMMAND_LEN, 0);
     }
-    system("/bin/stty cooked");
     return 1;
+}
+
+int recvChat(void *arg) {
+    int s = *((int *)arg);
+    char recvBuf[COMMAND_LEN];
+    for (;;) {
+        int recvNum = recv(s, &recvBuf, sizeof(char) * COMMAND_LEN, 0);
+        if (recvNum == 0) die("thread/recvChat");
+        for (int i = 0; i < 10; i++) printf("%s\n", recvBuf);
+    }
+    return 0;
 }

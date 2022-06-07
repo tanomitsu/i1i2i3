@@ -10,8 +10,8 @@ LDFLAGS = -L$(LIBDIR)
 LDLIBS = -lfft
 
 SRC = $(SRCDIR)/discorb.c
-OBJ = $(SRCDIR)/fft.o $(SRCDIR)/connect.o $(SRCDIR)/communicate.o $(SRCDIR)/util.o
-LIB = $(LIBDIR)/libfft.a $(LIBDIR)/libconnect.a $(LIBDIR)/libcommunicate.a $(LIBDIR)/libutil.a
+OBJ = $(SRCDIR)/fft.o $(SRCDIR)/connect.o $(SRCDIR)/communicate.o $(SRCDIR)/util.o $(SRCDIR)/visualize.o $(SRCDIR)/chatQueue.o
+LIB = $(LIBDIR)/libfft.a $(LIBDIR)/libconnect.a $(LIBDIR)/libcommunicate.a $(LIBDIR)/libutil.a $(LIBDIR)/visualize.a $(LIBDIR)/chatQueue.a
 
 TARGET = $(BINDIR)/discorb.out
 
