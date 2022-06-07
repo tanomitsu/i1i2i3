@@ -117,11 +117,17 @@ int call(int s) {
             abs=cabs(Y[i]);
             if(abs>limit)Y[i]=Y[i]*limit/abs;
         }
-        */
+        
         for(int i=0;i<BUFSIZE;i++){
             double f=i/(double)BUFSIZE*44100;
             if(f<100.0 || f>1000.0)Y[i]=0;
         }
+        */
+       double max_amp=0;
+       double limit=300;
+       for(int i=0;i<BUFSIZE;i++){if(cabs(Y[i])>max_amp)max_amp=cabs(Y[i]);}
+       for(int i=0;i<BUFSIZE;i++){Y[i]=Y[i]/max_amp*limit;}
+       
         /* IFFT -> Z */
         ifft(Y, X, BUFSIZE);
         /* 標本の配列に変換 */
