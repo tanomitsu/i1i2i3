@@ -122,12 +122,11 @@ int call(int s) {
             double f=i/(double)BUFSIZE*44100;
             if(f<100.0 || f>1000.0)Y[i]=0;
         }
-        */
        double max_amp=0;
-       double limit=300;
+       double limit=400;
        for(int i=0;i<BUFSIZE;i++){if(cabs(Y[i])>max_amp)max_amp=cabs(Y[i]);}
        for(int i=0;i<BUFSIZE;i++){Y[i]=Y[i]/max_amp*limit;}
-       
+        */
         /* IFFT -> Z */
         ifft(Y, X, BUFSIZE);
         /* 標本の配列に変換 */
