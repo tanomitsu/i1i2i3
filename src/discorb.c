@@ -103,6 +103,23 @@ int call(int s) {
             perror("send");
             return 1;
         }
+
+        complex double* X = calloc(sizeof(complex double), BUFSIZE);
+        complex double* Y = calloc(sizeof(complex double), BUFSIZE);
+        /* 複素数の配列に変換 */
+        sample_to_complex(sendBuf, X, BUFSIZE);
+        /* FFT -> Y */
+        fft(X, Y, BUFSIZE);//X=t-axis
+
+        for(int i=0;i<BUFSIZE;i++){
+            if(creal(Y[i])*creal(Y[i])+cimag(Y[i])*cimag(Y[i])>50*50)Y[i]=0;
+        }
+
+        /* IFFT -> Z */
+        ifft(Y, X, BUFSIZE);
+        /* 標本の配列に変換 */
+        complex_to_sample(X, sendBuf, BUFSIZE);
+
         send(s, sendBuf, sendNum * sizeof(short), 0);
 
         // receive sound

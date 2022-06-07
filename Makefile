@@ -16,7 +16,7 @@ LIB = $(LIBDIR)/libfft.a
 TARGET = $(BINDIR)/discorb.out
 
 $(TARGET): $(SRC) $(LIB)
-	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS) $(LDLIBS)
+	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS) $(LDLIBS) -lm
 
 $(LIB): $(OBJ)
 	$(AR) rsv $@ $^
