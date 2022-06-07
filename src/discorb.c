@@ -87,7 +87,7 @@ int clientConnect(char *ip, int port) {
 
 int call(int s) {
     // parameters
-    const double ratio = 0.5;
+    const double ratio = 1.0;
 
     // start recording
     FILE *fp = popen("rec -t raw -b 16 -c 1 -e s -r 44100 -", "r");
@@ -95,13 +95,18 @@ int call(int s) {
     // after the client has connected
     fprintf(stderr, "A client has connected to your port.\n");
     fprintf(stderr, "Input what you want to send.\n");
+
+    // definition of variables
     short sendBuf[BUFSIZE];
     short recvBuf[BUFSIZE];
     complex double recvBeforeX[BUFSIZE];
     complex double recvBeforeY[BUFSIZE];
     complex double sendX[BUFSIZE];
     complex double sendY[BUFSIZE];
+
+    // initialize
     for (int i = 0; i < BUFSIZE; i++) recvBeforeY[i] = 0.0;
+
     for (;;) {
         // send sound
         int sendNum = fread(sendBuf, sizeof(short), BUFSIZE, fp);
