@@ -110,11 +110,13 @@ int call(int s) {
         sample_to_complex(sendBuf, X, BUFSIZE);
         /* FFT -> Y */
         fft(X, Y, BUFSIZE);//X=t-axis
-
+        int limit;
+        double abs;
         for(int i=0;i<BUFSIZE;i++){
-            if(creal(Y[i])*creal(Y[i])+cimag(Y[i])*cimag(Y[i])>50*50)Y[i]=0;
+            abs=cabs(Y[i]);
+            if(abs>limit)Y[i]=Y[i]*limit/abs;
         }
-
+        
         /* IFFT -> Z */
         ifft(Y, X, BUFSIZE);
         /* 標本の配列に変換 */
