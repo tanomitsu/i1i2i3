@@ -1,16 +1,36 @@
+#include <arpa/inet.h>
 #include <communicate.h>
-#include <complex.h>
+#include <connect.h>
+#include <fft.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <netinet/tcp.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 int call(int s) {
+    // parameters
+    const double ratio = 0.8;
+
     // start recording
     FILE *fp = popen("rec -t raw -b 16 -c 1 -e s -r 44100 -", "r");
 
     // after the client has connected
     fprintf(stderr, "A client has connected to your port.\n");
     fprintf(stderr, "Input what you want to send.\n");
+
+    // definition of variables
     short sendBuf[BUFSIZE];
     short recvBuf[BUFSIZE];
+    complex double recvBeforeX[BUFSIZE];
+    complex double recvBeforeY[BUFSIZE];
+    complex double sendX[BUFSIZE];
+    complex double sendY[BUFSIZE];
+
+    // initialize
+    for (int i = 0; i < BUFSIZE; i++) recvBeforeY[i] = 0.0;
 
     for (;;) {
         // send sound
@@ -21,22 +41,28 @@ int call(int s) {
             return 1;
         }
 
-        complex double *X = calloc(sizeof(complex double), BUFSIZE);
-        complex double *Y = calloc(sizeof(complex double), BUFSIZE);
-        /* 複素数の配列に変換 */
-        sample_to_complex(sendBuf, X, BUFSIZE);
-        /* FFT -> Y */
-        fft(X, Y, BUFSIZE);  // X=t-axis
+        // noise calcelling
+        sample_to_complex(sendBuf, sendX, BUFSIZE);
+        fft(sendX, sendY, BUFSIZE);
+        for (int i = 0; i < BUFSIZE; i++) sendY[i] -= ratio * recvBeforeY[i];
+        double maxAmp = 0;
+        for (int i = 0; i < BUFSIZE; i++) {
+            if (cabs(sendY[i]) > maxAmp) maxAmp = cabs(sendY[i]);
+        }
+        for (int i = 0; i < BUFSIZE; i++) sendY[i] = sendY[i] / maxAmp * 1000;
+        ifft(sendY, sendX, BUFSIZE);
+        complex_to_sample(sendX, sendBuf, BUFSIZE);
 
-        ifft(Y, X, BUFSIZE);
-        /* 標本の配列に変換 */
-        complex_to_sample(X, sendBuf, BUFSIZE);
-
+        // send data
         send(s, sendBuf, sendNum * sizeof(short), 0);
 
         // receive sound
         int recvNum = recv(s, recvBuf, sizeof(short) * BUFSIZE, 0);
         write(1, recvBuf, recvNum);
+
+        // save pre-received data for noise cancellation
+        sample_to_complex(recvBuf, recvBeforeX, BUFSIZE);
+        fft(recvBeforeX, recvBeforeY, BUFSIZE);
     }
     // fprintf(stderr, "Ended connection.\n");
     pclose(fp);
