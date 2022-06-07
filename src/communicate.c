@@ -15,7 +15,7 @@ int call(int s) {
     const double ratio = 0.;
 
     // start recording
-    FILE *fp = popen("rec -t raw -b 16 -c 1 -e s -r 44100 -", "r");
+    FILE *soundIn = popen("rec -t raw -b 16 -c 1 -e s -r 44100 -", "r");
     FILE *soundOut = popen("play -t raw -b 16 -c 1 -e s -r 44100 -", "w");
 
     // after the client has connected
@@ -35,7 +35,7 @@ int call(int s) {
 
     for (;;) {
         // send sound
-        int sendNum = fread(sendBuf, sizeof(short), BUFSIZE, fp);
+        int sendNum = fread(sendBuf, sizeof(short), BUFSIZE, soundIn);
         if (sendNum == 0) break;
         if (sendNum < 0) {
             perror("send");
@@ -72,6 +72,7 @@ int call(int s) {
         fft(recvBeforeX, recvBeforeY, BUFSIZE);
     }
     // fprintf(stderr, "Ended connection.\n");
-    pclose(fp);
+    pclose(soundIn);
+    pclose(soundOut);
     return 0;
 }
