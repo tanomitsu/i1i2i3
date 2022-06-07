@@ -104,12 +104,12 @@ int call(int s) {
             return 1;
         }
 
-        complex double* X = calloc(sizeof(complex double), BUFSIZE);
-        complex double* Y = calloc(sizeof(complex double), BUFSIZE);
+        complex double *X = calloc(sizeof(complex double), BUFSIZE);
+        complex double *Y = calloc(sizeof(complex double), BUFSIZE);
         /* 複素数の配列に変換 */
         sample_to_complex(sendBuf, X, BUFSIZE);
         /* FFT -> Y */
-        fft(X, Y, BUFSIZE);//X=t-axis
+        fft(X, Y, BUFSIZE);  // X=t-axis
         /*
         double limit=300;
         double abs;
@@ -117,15 +117,15 @@ int call(int s) {
             abs=cabs(Y[i]);
             if(abs>limit)Y[i]=Y[i]*limit/abs;
         }
-        
+
         for(int i=0;i<BUFSIZE;i++){
             double f=i/(double)BUFSIZE*44100;
             if(f<100.0 || f>1000.0)Y[i]=0;
         }
-       double max_amp=0;
-       double limit=400;
-       for(int i=0;i<BUFSIZE;i++){if(cabs(Y[i])>max_amp)max_amp=cabs(Y[i]);}
-       for(int i=0;i<BUFSIZE;i++){Y[i]=Y[i]/max_amp*limit;}
+        double max_amp=0;
+        double limit=400;
+        for(int i=0;i<BUFSIZE;i++){if(cabs(Y[i])>max_amp)max_amp=cabs(Y[i]);}
+        for(int i=0;i<BUFSIZE;i++){Y[i]=Y[i]/max_amp*limit;}
         */
         /* IFFT -> Z */
         ifft(Y, X, BUFSIZE);
