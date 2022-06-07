@@ -16,6 +16,7 @@ int call(int s) {
 
     // start recording
     FILE *fp = popen("rec -t raw -b 16 -c 1 -e s -r 44100 -", "r");
+    FILE *soundOut = popen("play -t raw -b 16 -c 1 -e s -r 44100 -", "w");
 
     // after the client has connected
     fprintf(stderr, "A client has connected to your port.\n");
@@ -63,7 +64,8 @@ int call(int s) {
 
         // receive sound
         int recvNum = recv(s, recvBuf, sizeof(short) * BUFSIZE, 0);
-        write(1, recvBuf, recvNum);
+        // write(1, recvBuf, recvNum);
+        fwrite(recvBuf, sizeof(short), BUFSIZE, soundOut);
 
         // save pre-received data for noise cancellation
         sample_to_complex(recvBuf, recvBeforeX, BUFSIZE);
