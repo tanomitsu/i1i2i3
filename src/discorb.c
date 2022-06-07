@@ -110,7 +110,7 @@ int call(int s) {
         sample_to_complex(sendBuf, X, BUFSIZE);
         /* FFT -> Y */
         fft(X, Y, BUFSIZE);//X=t-axis
-        int limit;
+        double limit=5000;
         double abs;
         for(int i=0;i<BUFSIZE;i++){
             abs=cabs(Y[i]);
