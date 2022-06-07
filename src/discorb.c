@@ -87,11 +87,7 @@ int clientConnect(char *ip, int port) {
 
 int call(int s) {
     // parameters
-<<<<<<< HEAD
     const double ratio = 0.8;
-=======
-    const double ratio = 1.0;
->>>>>>> 2363fd139dc9c7ca572b43951a83a0b6dacef0f0
 
     // start recording
     FILE *fp = popen("rec -t raw -b 16 -c 1 -e s -r 44100 -", "r");
