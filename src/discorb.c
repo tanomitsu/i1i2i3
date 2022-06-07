@@ -13,20 +13,18 @@
 int main(int argc, char **argv) {
     // connect
     int s = -1;
-    if (argc == 2) {
+    const int callPort = 55555;
+    if (argc == 1) {
         // server side
-        // ./a.out <port>
-        int port = atoi(argv[1]);
-        s = serverConnect(port);
-    } else if (argc == 3) {
+        // ./discorb.out
+        s = serverConnect(callPort);
+    } else if (argc == 2) {
         // client side
-        // ./a.out <IP> <port>
+        // ./a.out <IP>
         char *ip = argv[1];
-        int port = atoi(argv[2]);
-        s = clientConnect(ip, port);
+        s = clientConnect(ip, callPort);
     } else {
-        fprintf(stderr, "usage: %s <ip> <port> or %s <port>\n", argv[0],
-                argv[0]);
+        fprintf(stderr, "usage: %s <ip> or %s \n", argv[0], argv[0]);
         exit(1);
     }
     call(s);
