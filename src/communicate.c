@@ -9,6 +9,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "chatQueue.h"
 #include "connect.h"
 #include "fft.h"
 #include "visualize.h"
@@ -20,7 +21,8 @@ int call(void *arg) {
 
     // start recording
     FILE *soundIn = popen("rec -t raw -b 16 -c 1 -e s -r 44100 -", "r");
-    FILE *soundOut = popen("play -t raw -b 16 -c 1 -e s -r 44100 -", "w");
+    FILE *soundOut =
+        popen("play -t raw -b 16 -c 1 -e s -r 44100 - 2> bin/err.out", "w");
 
     // after the client has connected
     fprintf(stderr, "A client has connected to your port.\n");
@@ -70,15 +72,11 @@ int call(void *arg) {
 
         // receive sound
         recv(s, recvBuf, sizeof(short) * BUFSIZE, 0);
-        // write(1, recvBuf, recvNum);
         fwrite(recvBuf, sizeof(short), BUFSIZE, soundOut);
 
         // save pre-received data for noise cancellation
         sample_to_complex(recvBuf, recvBeforeX, BUFSIZE);
         fft(recvBeforeX, recvBeforeY, BUFSIZE);
-
-        // clear screen
-        display();
     }
     fprintf(stderr, "Ended connection.\n");
     system("/bin/stty cooked");
@@ -93,8 +91,6 @@ int sendChat(void *arg) {
     char cmd[COMMAND_LEN];
     for (;;) {
         if (fgets(cmd, COMMAND_LEN, stdin) == NULL) break;  // チャット送信終了
-        if (cmd[0] == ':') break;  // チャット送信終了
-        printf("send: %s\n", cmd);
         // 入力した文字を送信
         send(s, &cmd, sizeof(char) * COMMAND_LEN, 0);
     }
@@ -102,12 +98,19 @@ int sendChat(void *arg) {
 }
 
 int recvChat(void *arg) {
+    chatQueue *q = createChatQueue();
     int s = *((int *)arg);
     char recvBuf[COMMAND_LEN];
+    sleep(1);
+    display(q);
     for (;;) {
-        int recvNum = recv(s, &recvBuf, sizeof(char) * COMMAND_LEN, 0);
+        int recvNum = recv(s, recvBuf, sizeof(char) * COMMAND_LEN, 0);
         if (recvNum == 0) die("thread/recvChat");
-        for (int i = 0; i < 10; i++) printf("%s\n", recvBuf);
+
+        // chatのqueueにpushするが、長さが5を超えた場合5に揃える
+        chatPushBack(q, recvBuf, "guest");
+        if (q->size > CHAT_MAX) chatPopFront(q);
+        display(q);
     }
     return 0;
 }

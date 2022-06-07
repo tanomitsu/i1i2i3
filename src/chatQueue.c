@@ -16,8 +16,8 @@ int chatPushBack(chatQueue *q, char *content, char *senderName) {
     chatItem *new = (chatItem *)malloc(sizeof(chatItem));
 
     // set iniial values
-    memcpy(new->content, content, CHAT_LEN);
-    memcpy(new->senderName, senderName, NAME_LEN);
+    strcpy(new->content, content);
+    strcpy(new->senderName, senderName);
     new->next = NULL;
 
     if (q->size > 0) {
@@ -34,4 +34,13 @@ int chatPushBack(chatQueue *q, char *content, char *senderName) {
         return 0;
     }
     return 1;
+}
+
+int chatPopFront(chatQueue *q) {
+    if (q->size == 0) return 1;
+    chatItem *poppedItem = q->front;
+    q->front = q->front->next;
+    free(poppedItem);
+    q->size -= 1;
+    return 0;
 }

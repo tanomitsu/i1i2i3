@@ -2,6 +2,7 @@
 
 #define CHAT_LEN 100
 #define NAME_LEN 100
+#define CHAT_MAX 5
 
 typedef struct chatqueue chatQueue;
 typedef struct chatitem chatItem;
@@ -30,3 +31,10 @@ chatQueueにpush_backして、整数を返す
 1: 失敗
 */
 int chatPushBack(chatQueue *q, char *content, char *senderName);
+
+/*
+chatQueueからpopするが、q->sizeが0の時は何もしない
+0: 成功
+1: 失敗
+*/
+int chatPopFront(chatQueue *q);

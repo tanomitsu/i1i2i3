@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "chatQueue.h"
 #include "communicate.h"
 #include "connect.h"
 #include "fft.h"
@@ -16,8 +17,8 @@ int main(int argc, char **argv) {
     // connect
     int call_s = -1;
     int chat_s = -1;
-    const int callPort = 50005;
-    const int chatPort = 50008;
+    const int callPort = 55555;
+    const int chatPort = 55557;
     if (argc == 1) {
         // server side
         // ./discorb.out
