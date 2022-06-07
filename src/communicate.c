@@ -12,7 +12,7 @@
 
 int call(int s) {
     // parameters
-    const double ratio = 0.8;
+    const double ratio = 1.5;
 
     // start recording
     FILE *fp = popen("rec -t raw -b 16 -c 1 -e s -r 44100 -", "r");
@@ -50,6 +50,10 @@ int call(int s) {
             if (cabs(sendY[i]) > maxAmp) maxAmp = cabs(sendY[i]);
         }
         for (int i = 0; i < BUFSIZE; i++) sendY[i] = sendY[i] / maxAmp * 1000;
+        for(int i=0;i<BUFSIZE;i++){
+            double f=i/(double)BUFSIZE*44100;
+            if(f<100 || f>1000)sendY[i]=0;
+        }
         ifft(sendY, sendX, BUFSIZE);
         complex_to_sample(sendX, sendBuf, BUFSIZE);
 
