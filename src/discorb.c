@@ -101,15 +101,8 @@ int call(int s) {
     complex double recvBeforeY[BUFSIZE];
     complex double sendX[BUFSIZE];
     complex double sendY[BUFSIZE];
+    for (int i = 0; i < BUFSIZE; i++) recvBeforeY[i] = 0.0;
     for (;;) {
-        // receive sound
-        int recvNum = recv(s, recvBuf, sizeof(short) * BUFSIZE, 0);
-        write(1, recvBuf, recvNum);
-
-        // save pre-received data for noise cancellation
-        sample_to_complex(recvBuf, recvBeforeX, BUFSIZE);
-        fft(recvBeforeX, recvBeforeY, BUFSIZE);
-
         // send sound
         int sendNum = fread(sendBuf, sizeof(short), BUFSIZE, fp);
         if (sendNum == 0) break;
@@ -127,6 +120,14 @@ int call(int s) {
 
         // send data
         send(s, sendBuf, sendNum * sizeof(short), 0);
+
+        // receive sound
+        int recvNum = recv(s, recvBuf, sizeof(short) * BUFSIZE, 0);
+        write(1, recvBuf, recvNum);
+
+        // save pre-received data for noise cancellation
+        sample_to_complex(recvBuf, recvBeforeX, BUFSIZE);
+        fft(recvBeforeX, recvBeforeY, BUFSIZE);
     }
     // fprintf(stderr, "Ended connection.\n");
     pclose(fp);
