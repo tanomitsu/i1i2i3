@@ -87,7 +87,7 @@ int clientConnect(char *ip, int port) {
 
 int call(int s) {
     // parameters
-    const double ratio = 0.5;
+    const double ratio = 0.8;
 
     // start recording
     FILE *fp = popen("rec -t raw -b 16 -c 1 -e s -r 44100 -", "r");
@@ -115,6 +115,9 @@ int call(int s) {
         sample_to_complex(sendBuf, sendX, BUFSIZE);
         fft(sendX, sendY, BUFSIZE);
         for (int i = 0; i < BUFSIZE; i++) sendY[i] -= ratio * recvBeforeY[i];
+        double maxAmp=0;
+        for(int i = 0; i < BUFSIZE; i++){if(cabs(sendY[i])>maxAmp)maxAmp=cabs(sendY[i]);}
+        for(int i = 0; i < BUFSIZE; i++)sendY[i]=sendY[i]/maxAmp*1000;
         ifft(sendY, sendX, BUFSIZE);
         complex_to_sample(sendX, sendBuf, BUFSIZE);
 
