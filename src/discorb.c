@@ -126,9 +126,8 @@ int call(int s) {
         for(int i=0;i<BUFSIZE;i++){if(cabs(Y[i])>max_amp)max_amp=cabs(Y[i]);}
         for(int i=0;i<BUFSIZE;i++){Y[i]=Y[i]/max_amp*limit;}
         */
-       double para=1;
+       double para=0.75;
         for(int i=0;i<BUFSIZE;i++)Y[i]-=para*Y_resista[i];
-        Y_resista=Y;
         /* IFFT -> Z */
         ifft(Y, X, BUFSIZE);
         /* 標本の配列に変換 */
@@ -138,6 +137,9 @@ int call(int s) {
 
         // receive sound
         int recvNum = recv(s, recvBuf, sizeof(short) * BUFSIZE, 0);
+        complex double *X_resista = calloc(sizeof(complex double), BUFSIZE);
+        sample_to_complex(recvBuf, X_resista, BUFSIZE);
+        fft(X_resista, Y_resista, BUFSIZE);
         write(1, recvBuf, recvNum);
     }
     // fprintf(stderr, "Ended connection.\n");
