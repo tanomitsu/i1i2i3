@@ -94,7 +94,7 @@ int call(int s) {
     fprintf(stderr, "Input what you want to send.\n");
     short sendBuf[BUFSIZE];
     short recvBuf[BUFSIZE];
-
+    complex double *Y_resista = calloc(sizeof(complex double), BUFSIZE);
     for (;;) {
         // send sound
         int sendNum = fread(sendBuf, sizeof(short), BUFSIZE, fp);
@@ -103,7 +103,6 @@ int call(int s) {
             perror("send");
             return 1;
         }
-
         complex double *X = calloc(sizeof(complex double), BUFSIZE);
         complex double *Y = calloc(sizeof(complex double), BUFSIZE);
         /* 複素数の配列に変換 */
@@ -127,6 +126,9 @@ int call(int s) {
         for(int i=0;i<BUFSIZE;i++){if(cabs(Y[i])>max_amp)max_amp=cabs(Y[i]);}
         for(int i=0;i<BUFSIZE;i++){Y[i]=Y[i]/max_amp*limit;}
         */
+       double para=1;
+        for(int i=0;i<BUFSIZE;i++)Y[i]-=para*Y_resista[i];
+        Y_resista=Y;
         /* IFFT -> Z */
         ifft(Y, X, BUFSIZE);
         /* 標本の配列に変換 */
