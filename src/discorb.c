@@ -86,6 +86,9 @@ int clientConnect(char *ip, int port) {
 }
 
 int call(int s) {
+    // parameters
+    const double ratio = 0.5;
+
     // start recording
     FILE *fp = popen("rec -t raw -b 16 -c 1 -e s -r 44100 -", "r");
 
@@ -94,8 +97,19 @@ int call(int s) {
     fprintf(stderr, "Input what you want to send.\n");
     short sendBuf[BUFSIZE];
     short recvBuf[BUFSIZE];
-    complex double *Y_resista = calloc(BUFSIZE, sizeof(complex double));
+    complex double recvBeforeX[BUFSIZE];
+    complex double recvBeforeY[BUFSIZE];
+    complex double sendX[BUFSIZE];
+    complex double sendY[BUFSIZE];
     for (;;) {
+        // receive sound
+        int recvNum = recv(s, recvBuf, sizeof(short) * BUFSIZE, 0);
+        write(1, recvBuf, recvNum);
+
+        // save pre-received data for noise cancellation
+        sample_to_complex(recvBuf, recvBeforeX, BUFSIZE);
+        fft(recvBeforeX, recvBeforeY, BUFSIZE);
+
         // send sound
         int sendNum = fread(sendBuf, sizeof(short), BUFSIZE, fp);
         if (sendNum == 0) break;
@@ -103,27 +117,16 @@ int call(int s) {
             perror("send");
             return 1;
         }
-        complex double *X = calloc(BUFSIZE, sizeof(complex double));
-        complex double *Y = calloc(BUFSIZE, sizeof(complex double));
-        /* 複素数の配列に変換 */
-        sample_to_complex(sendBuf, X, BUFSIZE);
-        /* FFT -> Y */
-        fft(X, Y, BUFSIZE);
-        double para = 0;
-        for (int i = 0; i < BUFSIZE; i++) Y[i] -= para * Y_resista[i];
-        /* IFFT -> Z */
-        ifft(Y, X, BUFSIZE);
-        /* 標本の配列に変換 */
-        complex_to_sample(X, sendBuf, BUFSIZE);
 
+        // noise calcelling
+        sample_to_complex(sendBuf, sendX, BUFSIZE);
+        fft(sendX, sendY, BUFSIZE);
+        for (int i = 0; i < BUFSIZE; i++) sendY[i] -= ratio * recvBeforeY[i];
+        ifft(sendY, sendX, BUFSIZE);
+        complex_to_sample(sendX, sendBuf, BUFSIZE);
+
+        // send data
         send(s, sendBuf, sendNum * sizeof(short), 0);
-
-        // receive sound
-        int recvNum = recv(s, recvBuf, sizeof(short) * BUFSIZE, 0);
-        complex double *X_resista = calloc(BUFSIZE, sizeof(complex double));
-        sample_to_complex(recvBuf, X_resista, BUFSIZE);
-        fft(X_resista, Y_resista, BUFSIZE);
-        write(1, recvBuf, recvNum);
     }
     // fprintf(stderr, "Ended connection.\n");
     pclose(fp);
