@@ -1,18 +1,3 @@
-/*
- * fft.c
- * 使い方
- *   ./fft n
- *
- * 以下を繰り返す:
- *   標準入力から, 16 bit integerをn個読む
- *   FFTする
- *   逆FFTする
- *   標準出力へ出す
- *
- * したがって「ほぼ何もしない」フィルタになる
- *
- */
-
 #include <assert.h>
 #include <complex.h>
 #include <fft.h>
@@ -125,6 +110,7 @@ void print_complex(FILE* wp, complex double* Y, long n) {
     }
 }
 
+/*
 int main(int argc, char** argv) {
     (void)argc;
     long n = atol(argv[1]);
@@ -138,24 +124,25 @@ int main(int argc, char** argv) {
     complex double* X = calloc(sizeof(complex double), n);
     complex double* Y = calloc(sizeof(complex double), n);
     while (1) {
-        /* 標準入力からn個標本を読む */
+        // 標準入力からn個標本を読む
         ssize_t m = read_n(0, n * sizeof(sample_t), buf);
         if (m == 0) break;
-        /* 複素数の配列に変換 */
+        // 複素数の配列に変換
         sample_to_complex(buf, X, n);
-        /* FFT -> Y */
+        // FFT -> Y
         fft(X, Y, n);
 
         print_complex(wp, Y, n);
         fprintf(wp, "----------------\n");
 
-        /* IFFT -> Z */
+        // IFFT -> Z
         ifft(Y, X, n);
-        /* 標本の配列に変換 */
+        // 標本の配列に変換
         complex_to_sample(X, buf, n);
-        /* 標準出力へ出力 */
+        // 標準出力へ出力
         write_n(1, m, buf);
     }
     fclose(wp);
     return 0;
 }
+*/
