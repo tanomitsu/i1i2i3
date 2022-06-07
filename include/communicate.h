@@ -1,4 +1,8 @@
 #pragma once
 #define BUFSIZE 1024
+#define COMMAND_LEN 100
 
-int call(int s);
+// sへのポインタを引数にとり、通話を行う
+int call(void *arg);
+
+int chat(void *arg);
