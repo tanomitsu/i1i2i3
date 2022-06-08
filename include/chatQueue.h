@@ -38,3 +38,8 @@ chatQueueからpopするが、q->sizeが0の時は何もしない
 1: 失敗
 */
 int chatPopFront(chatQueue *q);
+
+/*
+文字列をコピーできるだけコピーし、コピーした文字数を返す関数
+*/
+int copyString(char *target, const char *src);

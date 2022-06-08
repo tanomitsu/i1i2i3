@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
     // connect
     int call_s = -1;
     int chat_s = -1;
-    const int callPort = 55555;
+    const int callPort = 55556;
     const int chatPort = 55557;
     if (argc == 1) {
         // server side
@@ -35,6 +35,9 @@ int main(int argc, char **argv) {
         fprintf(stderr, "usage: %s <ip> or %s \n", argv[0], argv[0]);
         exit(1);
     }
+
+    // get char before enter is pressed
+    system("/bin/stty raw onlcr");
 
     // set up multi thread
     pthread_t callThread, sendChatThread, recvChatThread;
@@ -56,4 +59,5 @@ int main(int argc, char **argv) {
     pthread_join(recvChatThread, NULL);
     close(call_s);
     close(chat_s);
+    system("/bin/stty cooked");
 }

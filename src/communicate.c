@@ -89,10 +89,22 @@ int sendChat(void *arg) {
     // parameters
     int s = *((int *)arg);
     char cmd[COMMAND_LEN];
+    int cmdIndex = 0;
+    char c;
     for (;;) {
-        if (fgets(cmd, COMMAND_LEN, stdin) == NULL) break;  // チャット送信終了
-        // 入力した文字を送信
-        send(s, &cmd, sizeof(char) * COMMAND_LEN, 0);
+        c = getchar();
+        printf("\033[1K \033[1K");
+        if (c == ':')
+            break;
+        else if ((int)c == 13) {
+            cmd[cmdIndex++] = '\0';
+            // 入力した文字を送信
+            send(s, &cmd, sizeof(char) * COMMAND_LEN, 0);
+            cmdIndex = 0;
+            cmd[0] = '\0';
+        } else {
+            cmd[cmdIndex++] = c;
+        }
     }
     return 1;
 }
