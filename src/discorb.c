@@ -19,6 +19,7 @@ int main(int argc, char **argv) {
     int chat_s = -1;
     const int callPort = 55556;
     const int chatPort = 55557;
+    char stopProgram = 0;  // 1になったらプログラムを終了する
     if (argc == 1) {
         // server side
         // ./discorb.out
@@ -39,14 +40,22 @@ int main(int argc, char **argv) {
     // get char before enter is pressed
     system("/bin/stty raw onlcr");
 
+    // properties to pass to pthread functions
+    CallProps _callProps =
+        (CallProps){.s = call_s, .stopProgram = &stopProgram};
+    SendChatProps _sendChatProps =
+        (SendChatProps){.s = chat_s, .stopProgram = &stopProgram};
+    RecvChatProps _recvChatProps =
+        (RecvChatProps){.s = chat_s, .stopProgram = &stopProgram};
+
     // set up multi thread
     pthread_t callThread, sendChatThread, recvChatThread;
     int callRet =
-        pthread_create(&callThread, NULL, (void *)&call, (void *)&call_s);
+        pthread_create(&callThread, NULL, (void *)&call, (void *)&_callProps);
     int sendChatRet = pthread_create(&sendChatThread, NULL, (void *)&sendChat,
-                                     (void *)&chat_s);
+                                     (void *)&_sendChatProps);
     int recvChatRet = pthread_create(&recvChatThread, NULL, (void *)&recvChat,
-                                     (void *)&chat_s);
+                                     (void *)&_recvChatProps);
 
     // error handling
     if (callRet != 0) die("thread/call");

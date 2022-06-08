@@ -4,6 +4,7 @@
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,8 +16,10 @@
 #include "visualize.h"
 
 int call(void *arg) {
-    // parameters
-    int s = *((int *)arg);
+    // properties passed
+    CallProps props = *((CallProps *)arg);
+    int s = props.s;
+    char *stopProgram = props.stopProgram;
     const double ratio = 0.;
 
     // start recording
@@ -86,8 +89,10 @@ int call(void *arg) {
 }
 
 int sendChat(void *arg) {
-    // parameters
-    int s = *((int *)arg);
+    // properties passsed
+    SendChatProps props = *((SendChatProps *)arg);
+    int s = props.s;
+    char *stopProgram = props.stopProgram;
     char cmd[COMMAND_LEN];
     int cmdIndex = 0;
     char c;
@@ -110,8 +115,12 @@ int sendChat(void *arg) {
 }
 
 int recvChat(void *arg) {
-    chatQueue *q = createChatQueue();
-    int s = *((int *)arg);
+    // properties passsed
+    RecvChatProps props = *((RecvChatProps *)arg);
+    int s = props.s;
+    char *stopProgram = props.stopProgram;
+
+    ChatQueue *q = createChatQueue();
     char recvBuf[COMMAND_LEN];
     sleep(1);
     display(q);
@@ -123,6 +132,8 @@ int recvChat(void *arg) {
         chatPushBack(q, recvBuf, "guest");
         if (q->size > CHAT_MAX) chatPopFront(q);
         display(q);
+
+        
     }
     return 0;
 }

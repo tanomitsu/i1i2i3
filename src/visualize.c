@@ -5,8 +5,8 @@
 
 #include "chatQueue.h"
 
-void display(chatQueue* q) {
-    chatItem* cur = q->front;
+void display(ChatQueue* q) {
+    ChatItem* cur = q->front;
 
     // 画面を更新
     // system("/bin/stty cooked");

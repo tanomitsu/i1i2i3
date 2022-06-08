@@ -8,3 +8,18 @@ int call(void *arg);
 int sendChat(void *arg);
 
 int recvChat(void *arg);
+
+typedef struct callProps {
+    int s;
+    char *stopProgram;
+} CallProps;
+
+typedef struct sendChatProps {
+    int s;
+    char *stopProgram;
+} SendChatProps;
+
+typedef struct recvChatProps {
+    int s;
+    char *stopProgram;
+} RecvChatProps;

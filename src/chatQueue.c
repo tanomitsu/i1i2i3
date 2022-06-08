@@ -6,16 +6,16 @@
 
 #include "util.h"
 
-chatQueue *createChatQueue() {
-    chatQueue *new = (chatQueue *)malloc(sizeof(chatQueue));
+ChatQueue *createChatQueue() {
+    ChatQueue *new = (ChatQueue *)malloc(sizeof(ChatQueue));
     new->front = NULL;
     new->back = NULL;
     new->size = 0;
     return new;
 }
 
-int chatPushBack(chatQueue *q, char *content, char *senderName) {
-    chatItem *new = (chatItem *)malloc(sizeof(chatItem));
+int chatPushBack(ChatQueue *q, char *content, char *senderName) {
+    ChatItem *new = (ChatItem *)malloc(sizeof(ChatItem));
 
     // set iniial values
 
@@ -34,7 +34,7 @@ int chatPushBack(chatQueue *q, char *content, char *senderName) {
         q->size += 1;
         return 0;
     } else {
-        // queue doesn't have any chatItem
+        // queue doesn't have any ChatItem
         q->front = new;
         q->back = new;
         q->size += 1;
@@ -43,9 +43,9 @@ int chatPushBack(chatQueue *q, char *content, char *senderName) {
     return 1;
 }
 
-int chatPopFront(chatQueue *q) {
+int chatPopFront(ChatQueue *q) {
     if (q->size == 0) return 1;
-    chatItem *poppedItem = q->front;
+    ChatItem *poppedItem = q->front;
     q->front = q->front->next;
     free(poppedItem);
     q->size -= 1;
