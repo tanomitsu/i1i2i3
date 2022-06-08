@@ -12,7 +12,7 @@
 
 int call(int s) {
     // parameters
-    const double ratio = 0.;
+    const double ratio = 0;
 
     // start recording
     FILE *soundIn = popen("rec -t raw -b 16 -c 1 -e s -r 44100 -", "r");
@@ -33,6 +33,9 @@ int call(int s) {
     // initialize
     for (int i = 0; i < BUFSIZE; i++) recvBeforeY[i] = 0.0;
 
+    int howling_step=0;
+    double pastAmp[31];
+    for(int i=0;i<31;i++)pastAmp[i] = -1;
     for (;;) {
         // send sound
         int sendNum = fread(sendBuf, sizeof(short), BUFSIZE, soundIn);
@@ -46,30 +49,53 @@ int call(int s) {
         sample_to_complex(sendBuf, sendX, BUFSIZE);
         fft(sendX, sendY, BUFSIZE);
         for (int i = 0; i < BUFSIZE; i++) sendY[i] -= ratio * recvBeforeY[i];
-        double maxAmp = 0;
-        for (int i = 0; i < BUFSIZE; i++) {
-            if (cabs(sendY[i]) > maxAmp) maxAmp = cabs(sendY[i]);
+
+        double maxAmp=0;
+        for (int i = 0; i < BUFSIZE; i++){if(cabs(sendY[i]) > maxAmp)maxAmp=cabs(sendY[i]);}
+        if(pastAmp[howling_step]<0){
+            pastAmp[howling_step]=maxAmp;
         }
-        // for (int i = 0; i < BUFSIZE; i++) sendY[i] = sendY[i] / maxAmp *
-        // 5000;
+        else if(maxAmp>pastAmp[howling_step]){
+            for (int i = 0; i < BUFSIZE; i++)sendY[i]=sendY[i]/3.0;
+            pastAmp[howling_step]=maxAmp/3.0;
+        }
+        else pastAmp[howling_step]=maxAmp;
+        printf("%f\n",pastAmp[howling_step]);
+        howling_step=(howling_step+1)%31;
+        double limit=5000;
+        if(maxAmp>limit){
+            double ratioamp=limit/maxAmp;
+            //for (int i = 0; i < BUFSIZE; i++) sendY[i] = sendY[i]*ratioamp;
+            //for (int i = 0; i < BUFSIZE; i++)sendY[i]=0;
+            
+        }
+        for (int i = 0; i < BUFSIZE; i++){if(cabs(sendY[i])<100)sendY[i]=0;}
         for (int i = 0; i < BUFSIZE; i++) {
             double f = i / (double)BUFSIZE * 44100;
-            // if (f < 20 || f > 5000) sendY[i] = 0;
+            if (f < 50 || f > 2000) sendY[i] = 0;
         }
-        ifft(sendY, sendX, BUFSIZE);
-        complex_to_sample(sendX, sendBuf, BUFSIZE);
+        //ifft(sendY, sendX, BUFSIZE);
+        //complex_to_sample(sendX, sendBuf, BUFSIZE);
 
         // send data
-        send(s, sendBuf, sendNum * sizeof(short), 0);
+        send(s, sendY, sendNum * sizeof(complex double), 0);
 
         // receive sound
-        int recvNum = recv(s, recvBuf, sizeof(short) * BUFSIZE, 0);
-        // write(1, recvBuf, recvNum);
-        fwrite(recvBuf, sizeof(short), BUFSIZE, soundOut);
-
+        int recvNum = recv(s, recvBeforeY, sizeof(complex double) * BUFSIZE, 0);
         // save pre-received data for noise cancellation
-        sample_to_complex(recvBuf, recvBeforeX, BUFSIZE);
-        fft(recvBeforeX, recvBeforeY, BUFSIZE);
+        //sample_to_complex(recvBuf, recvBeforeX, BUFSIZE);
+        //fft(recvBeforeX, recvBeforeY, BUFSIZE);
+        /*for (int i = 0; i < BUFSIZE; i++){if(cabs(recvBeforeY[i])<100)recvBeforeY[i]=0;}
+        for (int i = 0; i < BUFSIZE; i++) {
+            double f = i / (double)BUFSIZE * 44100;
+            if (f < 50 || f > 2000) recvBeforeY[i] = 0;
+        }*/
+        //for (int i = 0; i < BUFSIZE; i++)printf("%f\n",cabs(recvBeforeY[i]));
+
+        // write(1, recvBuf, recvNum);
+        ifft(recvBeforeY, recvBeforeX, BUFSIZE);
+        complex_to_sample(recvBeforeX, recvBuf, BUFSIZE);
+        fwrite(recvBuf, sizeof(short), BUFSIZE, soundOut);
     }
     // fprintf(stderr, "Ended connection.\n");
     pclose(soundIn);
