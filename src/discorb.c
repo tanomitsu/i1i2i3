@@ -19,23 +19,54 @@ int main(int argc, char **argv) {
     int chat_s = -1;
     const int callPort = 55556;
     const int chatPort = 55557;
-    char stopProgram = 0;  // 1になったらプログラムを終了する
+    char stopProgram = 0;
+    char *ip;
+    ConnectMode connectMode;
+
     if (argc == 1) {
         // server side
         // ./discorb.out
-        call_s = serverConnect(callPort);
-        chat_s = serverConnect(chatPort);
+        connectMode = SERVER;
     } else if (argc == 2) {
         // client side
         // ./a.out <IP>
-        char *ip = argv[1];
-        call_s = clientConnect(ip, callPort);
-        usleep(1000);  // サーバー側がlistenするまで待つ
-        chat_s = clientConnect(ip, chatPort);
+        ip = argv[1];
+        connectMode = CLIENT;
     } else {
         fprintf(stderr, "usage: %s <ip> or %s \n", argv[0], argv[0]);
         exit(1);
     }
+
+    // threads for connecting
+    pthread_t callConnectThread, chatConnectThread;
+    CallConnectProps _CallConnectProps = (CallConnectProps){
+        .ip = ip,
+        .port = callPort,
+        .s = &call_s,
+        .connectMode = connectMode,
+    };
+    ChatConnectProps _ChatConnectProps = (ChatConnectProps){
+        .ip = ip,
+        .port = chatPort,
+        .s = &chat_s,
+        .connectMode = connectMode,
+    };
+
+    // connect
+    int chatConnectRet =
+        pthread_create(&chatConnectThread, NULL, (void *)&chatConnect,
+                       (void *)&_ChatConnectProps);
+    int callConnectRet =
+        pthread_create(&callConnectThread, NULL, (void *)&chatConnect,
+                       (void *)&_CallConnectProps);
+
+    // error handling for connecting threads
+    if (chatConnectRet != 0) die("thread/chatConnectThread");
+    if (callConnectRet != 0) die("thread/callConnectThread");
+
+    // connect用threadを後片付け
+    pthread_join(chatConnectThread, NULL);
+    pthread_join(callConnectThread, NULL);
 
     // mutex lock用の変数
     pthread_mutex_t mutex;
@@ -45,12 +76,21 @@ int main(int argc, char **argv) {
     system("/bin/stty raw onlcr");
 
     // properties to pass to pthread functions
-    CallProps _callProps =
-        (CallProps){.s = call_s, .stopProgram = &stopProgram, .mutex = &mutex};
+    CallProps _callProps = (CallProps){
+        .s = call_s,
+        .stopProgram = &stopProgram,
+        .mutex = &mutex,
+    };
     SendChatProps _sendChatProps = (SendChatProps){
-        .s = chat_s, .stopProgram = &stopProgram, .mutex = &mutex};
+        .s = chat_s,
+        .stopProgram = &stopProgram,
+        .mutex = &mutex,
+    };
     RecvChatProps _recvChatProps = (RecvChatProps){
-        .s = chat_s, .stopProgram = &stopProgram, .mutex = &mutex};
+        .s = chat_s,
+        .stopProgram = &stopProgram,
+        .mutex = &mutex,
+    };
 
     // set up multi thread
     pthread_t callThread, sendChatThread, recvChatThread;

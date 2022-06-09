@@ -53,3 +53,35 @@ int clientConnect(char *ip, int port) {
     fprintf(stderr, "Successfully connected to the IP adress.\n");
     return s;
 }
+
+int autoConnect(char *ip, int port, ConnectMode connectMode) {
+    if (connectMode == SERVER) {
+        int s = serverConnect(port);
+        return s;
+    }
+    if (connectMode == CLIENT) {
+        int s = clientConnect(ip, port);
+        return s;
+    }
+    return -1;
+}
+
+int callConnect(void *arg) {
+    CallConnectProps props = *((CallConnectProps *)arg);
+    char *ip = props.ip;
+    int port = props.port;
+    int *s = props.s;
+    ConnectMode connectMode = props.connectMode;
+    *s = autoConnect(ip, port, connectMode);
+    return 0;
+}
+
+int chatConnect(void *arg) {
+    ChatConnectProps props = *((ChatConnectProps *)arg);
+    char *ip = props.ip;
+    int port = props.port;
+    int *s = props.s;
+    ConnectMode connectMode = props.connectMode;
+    *s = autoConnect(ip, port, connectMode);
+    return 0;
+}
