@@ -17,8 +17,10 @@ int main(int argc, char **argv) {
     // connect
     int call_s = -1;
     int chat_s = -1;
+    int state_s = -1;
     const int callPort = 55556;
     const int chatPort = 55557;
+    const int statePort = 55558;
     char stopProgram = 0;
     char *ip;
     ConnectMode connectMode;
@@ -38,7 +40,7 @@ int main(int argc, char **argv) {
     }
 
     // threads for connecting
-    pthread_t callConnectThread, chatConnectThread;
+    pthread_t callConnectThread, chatConnectThread, stateConnectThread;
     CallConnectProps _CallConnectProps = (CallConnectProps){
         .ip = ip,
         .port = callPort,
@@ -51,6 +53,12 @@ int main(int argc, char **argv) {
         .s = &chat_s,
         .connectMode = connectMode,
     };
+    StateConnectProps _StateConnectProps = (StateConnectProps){
+        .ip = ip,
+        .port = statePort,
+        .s = &state_s,
+        .connectMode = connectMode,
+    };
 
     // connect
     int chatConnectRet =
@@ -59,14 +67,19 @@ int main(int argc, char **argv) {
     int callConnectRet =
         pthread_create(&callConnectThread, NULL, (void *)&chatConnect,
                        (void *)&_CallConnectProps);
+    int stateConnectRet =
+        pthread_create(&stateConnectThread, NULL, (void *)&callConnect,
+                       (void *)&_StateConnectProps);
 
     // error handling for connecting threads
     if (chatConnectRet != 0) die("thread/chatConnectThread");
     if (callConnectRet != 0) die("thread/callConnectThread");
+    if (stateConnectRet != 0) die("thread/stateConnectThread");
 
     // connect用threadを後片付け
     pthread_join(chatConnectThread, NULL);
     pthread_join(callConnectThread, NULL);
+    pthread_join(stateConnectThread, NULL);
 
     // mutex lock用の変数
     pthread_mutex_t mutex;
@@ -113,5 +126,6 @@ int main(int argc, char **argv) {
     pthread_join(recvChatThread, NULL);
     close(call_s);
     close(chat_s);
+    close(state_s);
     system("/bin/stty cooked");
 }

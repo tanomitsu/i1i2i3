@@ -22,3 +22,10 @@ typedef struct chatConnectProps {
     int *s;  // 出力用
     ConnectMode connectMode;
 } ChatConnectProps;
+
+typedef struct stateConnectProps {
+    char *ip;
+    int port;
+    int *s;
+    ConnectMode connectMode;
+} StateConnectProps;
