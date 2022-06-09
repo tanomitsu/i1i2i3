@@ -80,10 +80,10 @@ int call(int s) {
         if(pastProduct>0.1)r=Product/pastProduct;
         double r31=0;
         if(pastProduct31>0.1)r31=Product31/pastProduct31;
-        if(abs(r)>abs(r31) && r>0.5){
+        if(abs(r)>abs(r31) && abs(r)>0.5){
             for (int i = 0; i < BUFSIZE; i++)sendY[i]-=pastsend[cnt][i]*r;
         }
-        else if(abs(r31)>abs(r)&& r31>0.5){
+        else if(abs(r31)>abs(r)&& abs(r31)>0.5){
             for (int i = 0; i < BUFSIZE; i++)sendY[i]-=pastsend[(cnt+1)%cycle][i]*r31;
             cnt=(cnt+1)%cycle;
         }
