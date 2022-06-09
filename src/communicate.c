@@ -80,7 +80,7 @@ int call(int s) {
         // receive sound
         int recvNum = recv(s, &recvBeforeY[cnt], sizeof(complex double) * BUFSIZE, 0);
         for (int i=0; i<BUFSIZE; i++) {
-            recvBeforeY[cnt][i] -= (recvBeforeY[(cnt+1)%33][i]*rate + recvBeforeY[(cnt+2)%33][i]*(1-rate));
+            //recvBeforeY[cnt][i] -= (recvBeforeY[(cnt+1)%33][i]*rate + recvBeforeY[(cnt+2)%33][i]*(1-rate));
         }
         // double rmax=0;
         // for (int i = 0; i < BUFSIZE; i++){if(cabs(recvBeforeY[i]) > rmax)rmax=cabs(recvBeforeY[i]);}
