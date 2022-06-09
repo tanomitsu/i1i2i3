@@ -1,6 +1,6 @@
 #pragma once
 #define BUFSIZE 1024
-#define COMMAND_LEN 100
+#define COMMAND_LEN 1024
 
 #include <pthread.h>
 #include <visualize.h>

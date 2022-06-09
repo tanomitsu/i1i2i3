@@ -137,12 +137,11 @@ int sendChat(void *arg) {
             copyString(sendItem.senderName, state->myName);
             send(s, &sendItem, sizeof(ChatItem), 0);
             cmdIndex = 0;
-            cmd[0] = '\0';
+            memset(cmd, 0, COMMAND_LEN);
             pthread_mutex_unlock(mutex);
         } else {
             pthread_mutex_lock(mutex);
             cmd[cmdIndex++] = c;
-            cmd[cmdIndex] = '\0';
             pthread_mutex_unlock(mutex);
         }
         display(_displayProps);
