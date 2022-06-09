@@ -13,7 +13,7 @@
 int main(int argc, char **argv) {
     // connect
     int s = -1;
-    const int callPort = 55555;
+    const int callPort = 55554;
     if (argc == 1) {
         // server side
         // ./discorb.out
