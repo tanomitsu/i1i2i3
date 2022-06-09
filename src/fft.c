@@ -110,6 +110,17 @@ void print_complex(FILE* wp, complex double* Y, long n) {
     }
 }
 
+void remove_small_sound(complex double *Y, long n) {
+    for (int i = 0; i < n; i++){if(cabs(Y[i])<100)Y[i]=0;}
+}
+
+void band_pass_filter(complex double *Y, long n) {
+    for(int i = 0; i < n; i++) {
+        double f = i / (double)n * 44100;
+        if (f < 50 || f > 2000) Y[i] = 0;
+    }
+}
+
 /*
 int main(int argc, char** argv) {
     (void)argc;

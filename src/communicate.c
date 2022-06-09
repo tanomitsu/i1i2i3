@@ -26,16 +26,17 @@ int call(int s) {
     short sendBuf[BUFSIZE];
     short recvBuf[BUFSIZE];
     complex double recvBeforeX[BUFSIZE];
-    complex double recvBeforeY[BUFSIZE];
+    complex double recvBeforeY[33][BUFSIZE];
     complex double sendX[BUFSIZE];
     complex double sendY[BUFSIZE];
-
+    int cnt = 0;
+    float rate = 0.5;
     // initialize
-    for (int i = 0; i < BUFSIZE; i++) recvBeforeY[i] = 0.0;
+    for (int i = 0; i < BUFSIZE; i++) recvBeforeY[0][i] = 0.0;
 
-    double pastAmp[47];//BPF(50-2000)なのでindex(2-46)
-    for(int i=0;i<47;i++)pastAmp[i] = -1;
-    //FILE* fp=fopen("recv1.txt", "w");
+    // double pastAmp[47];//BPF(50-2000)なのでindex(2-46)
+    // for(int i=0;i<47;i++)pastAmp[i] = -1;
+
     for (;;) {
         // send sound
         int sendNum = fread(sendBuf, sizeof(short), BUFSIZE, soundIn);
@@ -47,64 +48,50 @@ int call(int s) {
         // noise calcelling
         sample_to_complex(sendBuf, sendX, BUFSIZE);
         fft(sendX, sendY, BUFSIZE);
-        for (int i = 0; i < BUFSIZE; i++){if(cabs(sendY[i])<100)sendY[i]=0;}
-        for(int i = 0; i < BUFSIZE; i++) {
-                double f = i / (double)BUFSIZE * 44100;
-                if (f < 50 || f > 2000) sendY[i] = 0;
-        }
-        //for (int i = 0; i < BUFSIZE; i++) sendY[i] -= ratio * recvBeforeY[i];
-        /*
-       else if(maxAmp>pastAmp[howling_step]){
-            for (int i = 0; i < BUFSIZE; i++)sendY[i]=sendY[i]/3.0;
-            pastAmp[howling_step]=maxAmp/3.0;
-        }
-        */
+        remove_small_sound(sendY, BUFSIZE);
+        band_pass_filter(sendY, BUFSIZE);
+        
         double maxAmp=0;
         int maxHz=-1;
-        for (int i = 0; i < BUFSIZE; i++){
-            if(cabs(sendY[i]) > maxAmp){
-                maxAmp=cabs(sendY[i]);
-                maxHz=i;
-            }
-        }
-        if(maxAmp>10000){
-            for (int i = 0; i < BUFSIZE; i++)sendY[i]=0;
-            maxAmp=-1;
-        }
-        else{
-            if(pastAmp[maxHz]<0)pastAmp[maxHz]=maxAmp;
-            else{
-                if(maxAmp>pastAmp[maxHz] && maxAmp>5000){
-                    for (int i = 0; i < BUFSIZE; i++)sendY[i]*=0.5;
-                    maxAmp*=0.5;
-                }
-                else pastAmp[maxHz]=maxAmp;
-            }
-        }
-        /*
-        if(15<maxHz && maxHz<47 && maxAmp>5000){
-            for(int i=16;i<47;i++)sendY[i]=0;
-        }
-        */
-        // send data
-        //printf("%f %d\n", maxAmp, maxHz);
-        for(int i=0;i<BUFSIZE; i++)printf("%f\n", cabs(sendY[i]));
+        // for (int i = 0; i < BUFSIZE; i++){
+        //     if(cabs(sendY[i]) > maxAmp){
+        //         maxAmp=cabs(sendY[i]);
+        //         maxHz=i;
+        //     }
+        // }
+        // if(maxAmp>10000){
+        //     for (int i = 0; i < BUFSIZE; i++)sendY[i]=0;
+        //     maxAmp=-1;
+        // }
+        // else{
+        //     if(pastAmp[maxHz]<0)pastAmp[maxHz]=maxAmp;
+        //     else{
+        //         if(maxAmp>pastAmp[maxHz] && maxAmp>5000){
+        //             for (int i = 0; i < BUFSIZE; i++)sendY[i]*=0.5;
+        //             maxAmp*=0.5;
+        //         }
+        //         else pastAmp[maxHz]=maxAmp;
+        //     }
+        // }
+        
+        // for(int i=0;i<BUFSIZE; i++)printf("%f\n", cabs(sendY[i]));
         send(s, sendY, sendNum * sizeof(complex double), 0);
 
         // receive sound
-        int recvNum = recv(s, recvBeforeY, sizeof(complex double) * BUFSIZE, 0);
+        int recvNum = recv(s, &recvBeforeY[cnt], sizeof(complex double) * BUFSIZE, 0);
+        for (int i=0; i<BUFSIZE; i++) {
+            recvBeforeY[cnt][i] -= (recvBeforeY[(cnt+1)%33][i]*rate + recvBeforeY[(cnt+2)%33][i]*(1-rate));
+        }
+        // double rmax=0;
+        // for (int i = 0; i < BUFSIZE; i++){if(cabs(recvBeforeY[i]) > rmax)rmax=cabs(recvBeforeY[i]);}
 
-        // write(1, recvBuf, recvNum);
-        double rmax=0;
-        for (int i = 0; i < BUFSIZE; i++){if(cabs(recvBeforeY[i]) > rmax)rmax=cabs(recvBeforeY[i]);}
-        //printf("%f\n",rmax);
         ifft(recvBeforeY, recvBeforeX, BUFSIZE);
         complex_to_sample(recvBeforeX, recvBuf, BUFSIZE);
         fwrite(recvBuf, sizeof(short), BUFSIZE, soundOut);
     }
-    // fprintf(stderr, "Ended connection.\n");
+
     pclose(soundIn);
     pclose(soundOut);
-    //fclose(fp);
+    
     return 0;
 }
