@@ -25,14 +25,14 @@ int call(int s) {
     // definition of variables
     short sendBuf[BUFSIZE];
     short recvBuf[BUFSIZE];
-    complex double recvBeforeX[BUFSIZE];
-    complex double recvBeforeY[33][BUFSIZE];
+    complex double recvX[BUFSIZE];
+    complex double recvY[33][BUFSIZE];
     complex double sendX[BUFSIZE];
     complex double sendY[BUFSIZE];
     int cnt = 0;
     float rate = 0.5;
     // initialize
-    for (int i = 0; i < BUFSIZE; i++) recvBeforeY[0][i] = 0.0;
+    for (int i = 0; i < BUFSIZE; i++) recvY[0][i] = 0.0;
 
     // double pastAmp[47];//BPF(50-2000)なのでindex(2-46)
     // for(int i=0;i<47;i++)pastAmp[i] = -1;
@@ -59,6 +59,7 @@ int call(int s) {
                 maxHz=i;
             }
         }
+        if(maxHz==20)printf("count=%d, maxhz=%d\n", cnt,maxHz);
         printf("%d %f\n", maxHz, maxAmp);
         if(maxAmp>5000){
             for (int i = 0; i < BUFSIZE; i++)sendY[i]=0;
@@ -79,16 +80,14 @@ int call(int s) {
         send(s, sendY, sendNum * sizeof(complex double), 0);
 
         // receive sound
-        int recvNum = recv(s, recvBeforeY[cnt], sizeof(complex double) * BUFSIZE, 0);
+        int recvNum = recv(s, recvY[cnt%33], sizeof(complex double) * BUFSIZE, 0);
         for (int i=0; i<BUFSIZE; i++) {
             //recvBeforeY[cnt][i] -= (recvBeforeY[(cnt+1)%33][i]*rate + recvBeforeY[(cnt+2)%33][i]*(1-rate));
         }
-        // double rmax=0;
-        // for (int i = 0; i < BUFSIZE; i++){if(cabs(recvBeforeY[i]) > rmax)rmax=cabs(recvBeforeY[i]);}
-
-        ifft(recvBeforeY[cnt], recvBeforeX, BUFSIZE);
-        complex_to_sample(recvBeforeX, recvBuf, BUFSIZE);
+        ifft(recvY[cnt%33], recvX, BUFSIZE);
+        complex_to_sample(recvX, recvBuf, BUFSIZE);
         fwrite(recvBuf, sizeof(short), BUFSIZE, soundOut);
+        cnt+=1;
     }
 
     pclose(soundIn);
