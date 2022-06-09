@@ -4,6 +4,7 @@
 
 #include <pthread.h>
 #include <visualize.h>
+typedef struct state State;
 
 // sへのポインタを引数にとり、通話を行う
 int call(void *arg);
@@ -16,22 +17,25 @@ typedef struct callProps {
     int s;
     char *stopProgram;
     pthread_mutex_t *mutex;
-    ChatQueue *q;
-    char *inputString;
+    State *state;
 } CallProps;
 
 typedef struct sendChatProps {
     int s;
     char *stopProgram;
     pthread_mutex_t *mutex;
-    ChatQueue *q;
-    char *inputString;
+    State *state;
 } SendChatProps;
 
 typedef struct recvChatProps {
     int s;
     char *stopProgram;
     pthread_mutex_t *mutex;
-    ChatQueue *q;
-    char *inputString;
+    State *state;
 } RecvChatProps;
+
+struct state {
+    char myName[NAME_LEN];
+    char cmd[COMMAND_LEN];
+    ChatQueue *q;
+};

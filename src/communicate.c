@@ -21,8 +21,6 @@ int call(void *arg) {
     int s = props.s;
     char *stopProgram = props.stopProgram;
     pthread_mutex_t *mutex = props.mutex;
-    ChatQueue *q = props.q;
-    char *inputString = props.inputString;
     const double ratio = 0.;
 
     // start recording
@@ -103,8 +101,9 @@ int sendChat(void *arg) {
     int s = props.s;
     char *stopProgram = props.stopProgram;
     pthread_mutex_t *mutex = props.mutex;
-    char *cmd = props.inputString;
-    ChatQueue *q = props.q;
+    State *state = props.state;
+    ChatQueue *q = state->q;
+    char *cmd = state->cmd;
 
     DisplayProps _displayProps = (DisplayProps){
         .inputString = cmd,
@@ -133,7 +132,10 @@ int sendChat(void *arg) {
             pthread_mutex_lock(mutex);
             cmd[cmdIndex++] = '\0';
             // 入力した文字を送信
-            send(s, cmd, sizeof(char) * COMMAND_LEN, 0);
+            ChatItem sendItem = (ChatItem){.next = NULL};
+            copyString(sendItem.content, cmd);
+            copyString(sendItem.senderName, state->myName);
+            send(s, &sendItem, sizeof(ChatItem), 0);
             cmdIndex = 0;
             cmd[0] = '\0';
             pthread_mutex_unlock(mutex);
@@ -155,25 +157,26 @@ int recvChat(void *arg) {
     int s = props.s;
     char *stopProgram = props.stopProgram;
     pthread_mutex_t *mutex = props.mutex;
-    char *inpuString = props.inputString;
-    ChatQueue *q = props.q;
+    State *state = props.state;
+    char *cmd = state->cmd;
+    ChatQueue *q = state->q;
 
     DisplayProps _displayProps = (DisplayProps){
-        .inputString = inpuString,
+        .inputString = cmd,
         .mutex = mutex,
         .q = q,
     };
 
-    char recvBuf[COMMAND_LEN];
     sleep(1);
     display(_displayProps);
     for (;;) {
-        int recvNum = recv(s, recvBuf, sizeof(char) * COMMAND_LEN, 0);
+        ChatItem recvItem;
+        int recvNum = recv(s, &recvItem, sizeof(ChatItem), 0);
         if (recvNum == 0) die("thread/recvChat");
 
         // chatのqueueにpushするが、長さが5を超えた場合5に揃える
         pthread_mutex_lock(mutex);
-        chatPushBack(q, recvBuf, "guest");
+        chatPushBack(q, recvItem.content, recvItem.senderName);
         if (q->size > CHAT_MAX) chatPopFront(q);
         pthread_mutex_unlock(mutex);
         display(_displayProps);

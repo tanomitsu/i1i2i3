@@ -5,6 +5,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "chatQueue.h"
@@ -18,13 +19,14 @@ int main(int argc, char **argv) {
     int call_s = -1;
     int chat_s = -1;
     int state_s = -1;
-    const int callPort = 55551;
-    const int chatPort = 55552;
-    const int statePort = 55553;
+    const int callPort = 55550;
+    const int chatPort = 55551;
+    const int statePort = 55552;
     char stopProgram = 0;
     char *ip;
-    char cmd[COMMAND_LEN];
-    ChatQueue *q = createChatQueue();
+    State state;
+    memset(state.cmd, 0, COMMAND_LEN * sizeof(char));
+    state.q = createChatQueue();
     ConnectMode connectMode;
 
     if (argc == 1) {
@@ -40,6 +42,11 @@ int main(int argc, char **argv) {
         fprintf(stderr, "usage: %s <ip> or %s \n", argv[0], argv[0]);
         exit(1);
     }
+
+    printf("Input your name: ");
+    fgets(state.myName, NAME_LEN, stdin);
+    // remove \n
+    state.myName[strlen(state.myName) - 1] = '\0';
 
     // threads for connecting
     pthread_t callConnectThread, chatConnectThread, stateConnectThread;
@@ -95,22 +102,19 @@ int main(int argc, char **argv) {
         .s = call_s,
         .stopProgram = &stopProgram,
         .mutex = &mutex,
-        .q = q,
-        .inputString = cmd,
+        .state = &state,
     };
     SendChatProps _sendChatProps = (SendChatProps){
         .s = chat_s,
         .stopProgram = &stopProgram,
         .mutex = &mutex,
-        .q = q,
-        .inputString = cmd,
+        .state = &state,
     };
     RecvChatProps _recvChatProps = (RecvChatProps){
         .s = chat_s,
         .stopProgram = &stopProgram,
         .mutex = &mutex,
-        .q = q,
-        .inputString = cmd,
+        .state = &state,
     };
 
     // set up multi thread
