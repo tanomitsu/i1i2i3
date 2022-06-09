@@ -37,16 +37,20 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
+    // mutex lock用の変数
+    pthread_mutex_t mutex;
+    pthread_mutex_init(&mutex, NULL);
+
     // get char before enter is pressed
     system("/bin/stty raw onlcr");
 
     // properties to pass to pthread functions
     CallProps _callProps =
-        (CallProps){.s = call_s, .stopProgram = &stopProgram};
-    SendChatProps _sendChatProps =
-        (SendChatProps){.s = chat_s, .stopProgram = &stopProgram};
-    RecvChatProps _recvChatProps =
-        (RecvChatProps){.s = chat_s, .stopProgram = &stopProgram};
+        (CallProps){.s = call_s, .stopProgram = &stopProgram, .mutex = &mutex};
+    SendChatProps _sendChatProps = (SendChatProps){
+        .s = chat_s, .stopProgram = &stopProgram, .mutex = &mutex};
+    RecvChatProps _recvChatProps = (RecvChatProps){
+        .s = chat_s, .stopProgram = &stopProgram, .mutex = &mutex};
 
     // set up multi thread
     pthread_t callThread, sendChatThread, recvChatThread;
@@ -63,6 +67,7 @@ int main(int argc, char **argv) {
     if (recvChatRet != 0) die("thread/recvChat");
 
     // multi thread後片付け
+    pthread_mutex_destroy(&mutex);
     pthread_join(callThread, NULL);
     pthread_join(sendChatThread, NULL);
     pthread_join(recvChatThread, NULL);

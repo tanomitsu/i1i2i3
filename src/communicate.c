@@ -20,6 +20,7 @@ int call(void *arg) {
     CallProps props = *((CallProps *)arg);
     int s = props.s;
     char *stopProgram = props.stopProgram;
+    pthread_mutex_t *mutex = props.mutex;
     const double ratio = 0.;
 
     // start recording
@@ -80,6 +81,12 @@ int call(void *arg) {
         // save pre-received data for noise cancellation
         sample_to_complex(recvBuf, recvBeforeX, BUFSIZE);
         fft(recvBeforeX, recvBeforeY, BUFSIZE);
+        pthread_mutex_lock(mutex);
+        if (*stopProgram) {
+            pthread_mutex_unlock(mutex);
+            break;
+        } else
+            pthread_mutex_unlock(mutex);
     }
     fprintf(stderr, "Ended connection.\n");
     system("/bin/stty cooked");
@@ -93,15 +100,19 @@ int sendChat(void *arg) {
     SendChatProps props = *((SendChatProps *)arg);
     int s = props.s;
     char *stopProgram = props.stopProgram;
+    pthread_mutex_t *mutex = props.mutex;
     char cmd[COMMAND_LEN];
     int cmdIndex = 0;
     char c;
     for (;;) {
         c = getchar();
         printf("\033[1K \033[1K");
-        if (c == ':')
+        if (c == ':') {
+            pthread_mutex_lock(mutex);
+            *stopProgram = 1;  // end program
+            pthread_mutex_unlock(mutex);
             break;
-        else if ((int)c == 13) {
+        } else if ((int)c == 13) {
             cmd[cmdIndex++] = '\0';
             // 入力した文字を送信
             send(s, &cmd, sizeof(char) * COMMAND_LEN, 0);
@@ -119,6 +130,7 @@ int recvChat(void *arg) {
     RecvChatProps props = *((RecvChatProps *)arg);
     int s = props.s;
     char *stopProgram = props.stopProgram;
+    pthread_mutex_t *mutex = props.mutex;
 
     ChatQueue *q = createChatQueue();
     char recvBuf[COMMAND_LEN];
@@ -132,8 +144,12 @@ int recvChat(void *arg) {
         chatPushBack(q, recvBuf, "guest");
         if (q->size > CHAT_MAX) chatPopFront(q);
         display(q);
-
-        
+        pthread_mutex_lock(mutex);
+        if (*stopProgram) {
+            pthread_mutex_unlock(mutex);
+            break;
+        } else
+            pthread_mutex_unlock(mutex);
     }
     return 0;
 }
