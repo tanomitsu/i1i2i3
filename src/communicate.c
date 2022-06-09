@@ -12,7 +12,7 @@
 
 int call(int s) {
     // parameters
-    //const double ratio = 0;
+    // const double ratio = 0;
 
     // start recording
     FILE *soundIn = popen("rec -t raw -b 16 -c 1 -e s -r 44100 -", "r");
@@ -29,13 +29,15 @@ int call(int s) {
     complex double recvY[BUFSIZE];
     complex double sendX[BUFSIZE];
     complex double sendY[BUFSIZE];
-    int cycle=32;
+    int cycle = 32;
     complex double pastsend[cycle][BUFSIZE];
     int cnt = 0;
     float rate = 0.5;
     // initialize
     for (int i = 0; i < BUFSIZE; i++) recvY[i] = 0.0;
-    for(int j=0;j<cycle;j++){for (int i=0; i<BUFSIZE; i++)pastsend[j][i] = 0;}
+    for (int j = 0; j < cycle; j++) {
+        for (int i = 0; i < BUFSIZE; i++) pastsend[j][i] = 0;
+    }
 
     // double pastAmp[47];//BPF(50-2000)なのでindex(2-46)
     // for(int i=0;i<47;i++)pastAmp[i] = -1;
@@ -54,61 +56,73 @@ int call(int s) {
         remove_small_sound(sendY, BUFSIZE);
         band_pass_filter(sendY, BUFSIZE);
 
-        double maxAmp=0;
-        int maxHz=-1;
-        for (int i = 0; i < BUFSIZE; i++){
-            if(cabs(sendY[i]) > maxAmp){
-                maxAmp=cabs(sendY[i]);
-                maxHz=i;
+        double maxAmp = 0;
+        int maxHz = -1;
+        for (int i = 0; i < BUFSIZE; i++) {
+            if (cabs(sendY[i]) > maxAmp) {
+                maxAmp = cabs(sendY[i]);
+                maxHz = i;
             }
         }
-        //printf("%d %f\n", maxHz, maxAmp);
-        if(maxAmp>5000){
-            //for (int i = 0; i < BUFSIZE; i++)sendY[i]=0;
-            //maxAmp=-1;
+        // printf("%d %f\n", maxHz, maxAmp);
+        if (maxAmp > 5000) {
+            // for (int i = 0; i < BUFSIZE; i++)sendY[i]=0;
+            // maxAmp=-1;
         }
-        double pastProduct=0;
-        for (int i = 0; i < BUFSIZE; i++)pastProduct+=creal(pastsend[cnt][i])*creal(pastsend[cnt][i])+cimag(pastsend[cnt][i])*cimag(pastsend[cnt][i]);
-        double pastProduct31=0;
-        for (int i = 0; i < BUFSIZE; i++)pastProduct31+=creal(pastsend[(cnt+1)%cycle][i])*creal(pastsend[(cnt+1)%cycle][i])+cimag(pastsend[(cnt+1)%cycle][i])*cimag(pastsend[(cnt+1)%cycle][i]);
-        double Product=0;//32 cycle mae
-        for (int i = 0; i < BUFSIZE; i++)Product+=creal(sendY[i])*creal(pastsend[cnt][i])+cimag(sendY[i])*cimag(pastsend[cnt][i]);
-        double Product31=0;// 31 cycle mae
-        for (int i = 0; i < BUFSIZE; i++)Product31+=creal(sendY[i])*creal(pastsend[(cnt+1)%cycle][i])+cimag(sendY[i])*cimag(pastsend[(cnt+1)%cycle][i]);
-        
-        double r=0;
-        if(pastProduct>0.1)r=Product/pastProduct;
-        double r31=0;
-        if(pastProduct31>0.1)r31=Product31/pastProduct31;
-        if(abs(r)>abs(r31) && abs(r)>0.5){
-            for (int i = 0; i < BUFSIZE; i++)sendY[i]-=pastsend[cnt][i]*r;
+        double pastProduct = 0;
+        for (int i = 0; i < BUFSIZE; i++)
+            pastProduct += creal(pastsend[cnt][i]) * creal(pastsend[cnt][i]) +
+                           cimag(pastsend[cnt][i]) * cimag(pastsend[cnt][i]);
+        double pastProduct31 = 0;
+        for (int i = 0; i < BUFSIZE; i++)
+            pastProduct31 += creal(pastsend[(cnt + 1) % cycle][i]) *
+                                 creal(pastsend[(cnt + 1) % cycle][i]) +
+                             cimag(pastsend[(cnt + 1) % cycle][i]) *
+                                 cimag(pastsend[(cnt + 1) % cycle][i]);
+        double Product = 0;  // 32 cycle mae
+        for (int i = 0; i < BUFSIZE; i++)
+            Product += creal(sendY[i]) * creal(pastsend[cnt][i]) +
+                       cimag(sendY[i]) * cimag(pastsend[cnt][i]);
+        double Product31 = 0;  // 31 cycle mae
+        for (int i = 0; i < BUFSIZE; i++)
+            Product31 +=
+                creal(sendY[i]) * creal(pastsend[(cnt + 1) % cycle][i]) +
+                cimag(sendY[i]) * cimag(pastsend[(cnt + 1) % cycle][i]);
+
+        double r = 0;
+        if (pastProduct > 0.1) r = Product / pastProduct;
+        double r31 = 0;
+        if (pastProduct31 > 0.1) r31 = Product31 / pastProduct31;
+        if (abs(r) > abs(r31) && abs(r) > 0.5) {
+            for (int i = 0; i < BUFSIZE; i++) sendY[i] -= pastsend[cnt][i] * r;
+        } else if (abs(r31) > abs(r) && abs(r31) > 0.5) {
+            for (int i = 0; i < BUFSIZE; i++)
+                sendY[i] -= pastsend[(cnt + 1) % cycle][i] * r31;
+            cnt = (cnt + 1) % cycle;
         }
-        else if(abs(r31)>abs(r)&& abs(r31)>0.5){
-            for (int i = 0; i < BUFSIZE; i++)sendY[i]-=pastsend[(cnt+1)%cycle][i]*r31;
-            cnt=(cnt+1)%cycle;
-        }
-        for (int i = 0; i < BUFSIZE; i++)pastsend[cnt][i]=sendY[i];
-        printf("%f %f\n", r,r31);
-        
-        //for(int i = 0; i < BUFSIZE; i++)printf("%f\n", cabs(sendY[i]));
-        // else{
-        //     if(pastAmp[maxHz]<0)pastAmp[maxHz]=maxAmp;
-        //     else{
-        //         if(maxAmp>pastAmp[maxHz] && maxAmp>5000){
-        //             for (int i = 0; i < BUFSIZE; i++)sendY[i]*=0.5;
-        //             maxAmp*=0.5;
-        //         }
-        //         else pastAmp[maxHz]=maxAmp;
-        //     }
-        // }
-        cnt=(cnt+1)%cycle;
+        for (int i = 0; i < BUFSIZE; i++) pastsend[cnt][i] = sendY[i];
+        printf("%f %f\n", r, r31);
+
+        // for(int i = 0; i < BUFSIZE; i++)printf("%f\n", cabs(sendY[i]));
+        //  else{
+        //      if(pastAmp[maxHz]<0)pastAmp[maxHz]=maxAmp;
+        //      else{
+        //          if(maxAmp>pastAmp[maxHz] && maxAmp>5000){
+        //              for (int i = 0; i < BUFSIZE; i++)sendY[i]*=0.5;
+        //              maxAmp*=0.5;
+        //          }
+        //          else pastAmp[maxHz]=maxAmp;
+        //      }
+        //  }
+        cnt = (cnt + 1) % cycle;
         // for(int i=0;i<BUFSIZE; i++)printf("%f\n", cabs(sendY[i]));
         send(s, sendY, sendNum * sizeof(complex double), 0);
 
         // receive sound
         int recvNum = recv(s, recvY, sizeof(complex double) * BUFSIZE, 0);
-        for (int i=0; i<BUFSIZE; i++) {
-            //recvBeforeY[cnt][i] -= (recvBeforeY[(cnt+1)%33][i]*rate + recvBeforeY[(cnt+2)%33][i]*(1-rate));
+        for (int i = 0; i < BUFSIZE; i++) {
+            // recvBeforeY[cnt][i] -= (recvBeforeY[(cnt+1)%33][i]*rate +
+            // recvBeforeY[(cnt+2)%33][i]*(1-rate));
         }
         ifft(recvY, recvX, BUFSIZE);
         complex_to_sample(recvX, recvBuf, BUFSIZE);
@@ -117,6 +131,6 @@ int call(int s) {
 
     pclose(soundIn);
     pclose(soundOut);
-    
+
     return 0;
 }
