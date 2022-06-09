@@ -36,6 +36,7 @@ int call(int s) {
     int howling_step=0;
     double pastAmp[31];
     for(int i=0;i<31;i++)pastAmp[i] = -1;
+    FILE* fp=fopen("recv1.txt", "w");
     for (;;) {
         // send sound
         int sendNum = fread(sendBuf, sizeof(short), BUFSIZE, soundIn);
@@ -48,11 +49,19 @@ int call(int s) {
         // noise calcelling
         sample_to_complex(sendBuf, sendX, BUFSIZE);
         fft(sendX, sendY, BUFSIZE);
-        for (int i = 0; i < BUFSIZE; i++) sendY[i] -= ratio * recvBeforeY[i];
+        //for (int i = 0; i < BUFSIZE; i++) sendY[i] -= ratio * recvBeforeY[i];
 
         double maxAmp=0;
-        for (int i = 0; i < BUFSIZE; i++){if(cabs(sendY[i]) > maxAmp)maxAmp=cabs(sendY[i]);}
-        
+        int maxHz=-1;
+        for (int i = 0; i < BUFSIZE; i++){
+            if(cabs(sendY[i]) > maxAmp){
+                maxAmp=cabs(sendY[i]);
+                if(maxAmp>2500)maxHz=i;
+            }
+        }
+        //printf("%f\n", maxAmp);
+        fprintf(fp, "%d\n", maxHz);
+        printf("%d\n", maxHz);
         if(pastAmp[howling_step]<0){
             pastAmp[howling_step]=maxAmp;
         }
@@ -61,7 +70,7 @@ int call(int s) {
             pastAmp[howling_step]=maxAmp/3.0;
         }
         else pastAmp[howling_step]=maxAmp;
-        printf("%f\n",pastAmp[howling_step]);
+        //printf("%f\n",pastAmp[howling_step]);
         howling_step=(howling_step+1)%31;
         double limit=5000;
         if(maxAmp>limit){
@@ -85,7 +94,7 @@ int call(int s) {
         // write(1, recvBuf, recvNum);
         double rmax=0;
         for (int i = 0; i < BUFSIZE; i++){if(cabs(recvBeforeY[i]) > rmax)rmax=cabs(recvBeforeY[i]);}
-        printf("%f\n",rmax);
+        //printf("%f\n",rmax);
         ifft(recvBeforeY, recvBeforeX, BUFSIZE);
         complex_to_sample(recvBeforeX, recvBuf, BUFSIZE);
         fwrite(recvBuf, sizeof(short), BUFSIZE, soundOut);
@@ -93,5 +102,6 @@ int call(int s) {
     // fprintf(stderr, "Ended connection.\n");
     pclose(soundIn);
     pclose(soundOut);
+    fclose(fp);
     return 0;
 }
