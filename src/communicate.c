@@ -21,6 +21,8 @@ int call(void *arg) {
     int s = props.s;
     char *stopProgram = props.stopProgram;
     pthread_mutex_t *mutex = props.mutex;
+    ChatQueue *q = props.q;
+    char *inputString = props.inputString;
     const double ratio = 0.;
 
     // start recording
@@ -101,7 +103,9 @@ int sendChat(void *arg) {
     int s = props.s;
     char *stopProgram = props.stopProgram;
     pthread_mutex_t *mutex = props.mutex;
-    char cmd[COMMAND_LEN];
+    char *cmd = props.inputString;
+    ChatQueue *q = props.q;
+
     int cmdIndex = 0;
     char c;
     for (;;) {
@@ -113,14 +117,19 @@ int sendChat(void *arg) {
             pthread_mutex_unlock(mutex);
             break;
         } else if ((int)c == 13) {
+            pthread_mutex_lock(mutex);
             cmd[cmdIndex++] = '\0';
             // 入力した文字を送信
-            send(s, &cmd, sizeof(char) * COMMAND_LEN, 0);
+            send(s, cmd, sizeof(char) * COMMAND_LEN, 0);
             cmdIndex = 0;
             cmd[0] = '\0';
+            pthread_mutex_unlock(mutex);
         } else {
+            pthread_mutex_lock(mutex);
             cmd[cmdIndex++] = c;
+            pthread_mutex_unlock(mutex);
         }
+        if (*stopProgram) break;
     }
     return 1;
 }
@@ -131,25 +140,29 @@ int recvChat(void *arg) {
     int s = props.s;
     char *stopProgram = props.stopProgram;
     pthread_mutex_t *mutex = props.mutex;
+    char *inpuString = props.inputString;
+    ChatQueue *q = props.q;
 
-    ChatQueue *q = createChatQueue();
+    DisplayProps _displayProps = (DisplayProps){
+        .inputString = inpuString,
+        .mutex = mutex,
+        .q = q,
+    };
+
     char recvBuf[COMMAND_LEN];
     sleep(1);
-    display(q);
+    display(_displayProps);
     for (;;) {
         int recvNum = recv(s, recvBuf, sizeof(char) * COMMAND_LEN, 0);
         if (recvNum == 0) die("thread/recvChat");
 
         // chatのqueueにpushするが、長さが5を超えた場合5に揃える
+        pthread_mutex_lock(mutex);
         chatPushBack(q, recvBuf, "guest");
         if (q->size > CHAT_MAX) chatPopFront(q);
-        display(q);
-        pthread_mutex_lock(mutex);
-        if (*stopProgram) {
-            pthread_mutex_unlock(mutex);
-            break;
-        } else
-            pthread_mutex_unlock(mutex);
+        pthread_mutex_unlock(mutex);
+        display(_displayProps);
+        if (*stopProgram) break;
     }
     return 0;
 }

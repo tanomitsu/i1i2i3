@@ -23,6 +23,8 @@ int main(int argc, char **argv) {
     const int statePort = 55558;
     char stopProgram = 0;
     char *ip;
+    char cmd[COMMAND_LEN];
+    ChatQueue *q = createChatQueue();
     ConnectMode connectMode;
 
     if (argc == 1) {
@@ -93,16 +95,22 @@ int main(int argc, char **argv) {
         .s = call_s,
         .stopProgram = &stopProgram,
         .mutex = &mutex,
+        .q = q,
+        .inputString = cmd,
     };
     SendChatProps _sendChatProps = (SendChatProps){
         .s = chat_s,
         .stopProgram = &stopProgram,
         .mutex = &mutex,
+        .q = q,
+        .inputString = cmd,
     };
     RecvChatProps _recvChatProps = (RecvChatProps){
         .s = chat_s,
         .stopProgram = &stopProgram,
         .mutex = &mutex,
+        .q = q,
+        .inputString = cmd,
     };
 
     // set up multi thread
