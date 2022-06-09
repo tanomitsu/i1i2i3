@@ -110,6 +110,7 @@ int sendChat(void *arg) {
         .inputString = cmd,
         .mutex = mutex,
         .q = q,
+        .state = state,
     };
 
     int cmdIndex = 0;
@@ -173,6 +174,7 @@ int recvChat(void *arg) {
         .inputString = cmd,
         .mutex = mutex,
         .q = q,
+        .state = state,
     };
 
     sleep(1);

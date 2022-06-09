@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
     const int statePort = 55552;
     char stopProgram = 0;
     char *ip;
-    State state;
+    State state = (State){.myName = "guest"};
     memset(state.cmd, 0, COMMAND_LEN * sizeof(char));
     state.q = createChatQueue();
     ConnectMode connectMode;
@@ -42,11 +42,6 @@ int main(int argc, char **argv) {
         fprintf(stderr, "usage: %s <ip> or %s \n", argv[0], argv[0]);
         exit(1);
     }
-
-    printf("Input your name: ");
-    fgets(state.myName, NAME_LEN, stdin);
-    // remove \n
-    state.myName[strlen(state.myName) - 1] = '\0';
 
     // threads for connecting
     pthread_t callConnectThread, chatConnectThread, stateConnectThread;

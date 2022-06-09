@@ -1,5 +1,5 @@
 #pragma once
-#include <communicate.h>
+#include "communicate.h"
 
 typedef enum connectmode { CLIENT, SERVER } ConnectMode;
 

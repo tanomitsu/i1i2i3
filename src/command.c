@@ -25,6 +25,7 @@ int checkCommand(char *cmd, char *target) {
     for (int i = 0; i < strlen(target); i++) {
         if (cmd[cur++] != target[i]) return -1;
     }
+    if (cmd[cur] != ' ') return -1;
     while (cur < strlen(cmd) && cmd[cur] != '\0' && cmd[cur] == ' ') cur++;
     return cur;
 }

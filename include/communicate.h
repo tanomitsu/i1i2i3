@@ -4,7 +4,12 @@
 
 #include <pthread.h>
 #include <visualize.h>
-typedef struct state State;
+
+typedef struct state {
+    char myName[NAME_LEN];
+    char cmd[COMMAND_LEN];
+    ChatQueue *q;
+} State;
 
 // sへのポインタを引数にとり、通話を行う
 int call(void *arg);
@@ -33,9 +38,3 @@ typedef struct recvChatProps {
     pthread_mutex_t *mutex;
     State *state;
 } RecvChatProps;
-
-struct state {
-    char myName[NAME_LEN];
-    char cmd[COMMAND_LEN];
-    ChatQueue *q;
-};
