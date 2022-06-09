@@ -35,7 +35,7 @@ int call(int s) {
 
     double pastAmp[47];//BPF(50-2000)なのでindex(2-46)
     for(int i=0;i<47;i++)pastAmp[i] = -1;
-    //FILE* fp=fopen("recv1.txt", "w");
+    int cnt = 0;
     for (;;) {
         // send sound
         int sendNum = fread(sendBuf, sizeof(short), BUFSIZE, soundIn);
@@ -81,14 +81,9 @@ int call(int s) {
                 else pastAmp[maxHz]=maxAmp;
             }
         }
-        /*
-        if(15<maxHz && maxHz<47 && maxAmp>5000){
-            for(int i=16;i<47;i++)sendY[i]=0;
-        }
-        */
         // send data
-        //printf("%f %d\n", maxAmp, maxHz);
-        for(int i=0;i<BUFSIZE; i++)printf("%f\n", cabs(sendY[i]));
+        printf("%f %d\n", maxAmp, maxHz);
+        //for(int i=0;i<BUFSIZE; i++)printf("%f\n", cabs(sendY[i]));
         send(s, sendY, sendNum * sizeof(complex double), 0);
 
         // receive sound
@@ -97,7 +92,6 @@ int call(int s) {
         // write(1, recvBuf, recvNum);
         double rmax=0;
         for (int i = 0; i < BUFSIZE; i++){if(cabs(recvBeforeY[i]) > rmax)rmax=cabs(recvBeforeY[i]);}
-        //printf("%f\n",rmax);
         ifft(recvBeforeY, recvBeforeX, BUFSIZE);
         complex_to_sample(recvBeforeX, recvBuf, BUFSIZE);
         fwrite(recvBuf, sizeof(short), BUFSIZE, soundOut);
@@ -105,6 +99,5 @@ int call(int s) {
     // fprintf(stderr, "Ended connection.\n");
     pclose(soundIn);
     pclose(soundOut);
-    //fclose(fp);
     return 0;
 }
