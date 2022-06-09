@@ -35,7 +35,8 @@ int call(int s) {
 
     double pastAmp[47];//BPF(50-2000)なのでindex(2-46)
     for(int i=0;i<47;i++)pastAmp[i] = -1;
-    int cnt = 0;
+    int step = 0;//0->31 loop
+
     for (;;) {
         // send sound
         int sendNum = fread(sendBuf, sizeof(short), BUFSIZE, soundIn);
@@ -49,8 +50,9 @@ int call(int s) {
         fft(sendX, sendY, BUFSIZE);
         for (int i = 0; i < BUFSIZE; i++){if(cabs(sendY[i])<100)sendY[i]=0;}
         for(int i = 0; i < BUFSIZE; i++) {
-                double f = i / (double)BUFSIZE * 44100;
-                if (f < 50 || f > 2000) sendY[i] = 0;
+            double f = i / (double)BUFSIZE * 44100;
+            if (f < 50 || f > 2000) sendY[i] = 0;
+            else if(f>800) sendY[i]*=(2000-f)/2000.0;
         }
         //for (int i = 0; i < BUFSIZE; i++) sendY[i] -= ratio * recvBeforeY[i];
         /*
@@ -66,7 +68,7 @@ int call(int s) {
                 maxAmp=cabs(sendY[i]);
                 maxHz=i;
             }
-        }
+        }/*
         if(maxAmp>10000){
             for (int i = 0; i < BUFSIZE; i++)sendY[i]=0;
             maxAmp=-1;
@@ -75,15 +77,15 @@ int call(int s) {
             if(pastAmp[maxHz]<0)pastAmp[maxHz]=maxAmp;
             else{
                 if(maxAmp>pastAmp[maxHz] && maxAmp>5000){
-                    for (int i = 0; i < BUFSIZE; i++)sendY[i]*=0.5;
-                    maxAmp*=0.5;
+                    for (int i = 0; i < BUFSIZE; i++)sendY[i]*=0.3;
+                    maxAmp*=0.3;
                 }
                 else pastAmp[maxHz]=maxAmp;
             }
-        }
+        }*/
         // send data
-        printf("%f %d\n", maxAmp, maxHz);
-        //for(int i=0;i<BUFSIZE; i++)printf("%f\n", cabs(sendY[i]));
+        //printf("%f %d\n", maxAmp, maxHz);
+        for(int i=0;i<BUFSIZE; i++)printf("%f\n", cabs(sendY[i]));
         send(s, sendY, sendNum * sizeof(complex double), 0);
 
         // receive sound
