@@ -54,11 +54,12 @@ int chatPopFront(ChatQueue *q) {
 
 int copyString(char *target, const char *src) {
     int res = 0;
-    for (int i = 0; i < minInt(CHAT_LEN, strlen(src)); i++) {
-        target[i] = src[i];
+    int cur = 0;
+    for (cur = 0; cur < minInt(CHAT_LEN, strlen(src)); cur++) {
+        target[cur] = src[cur];
         res++;
     }
-    target[strlen(target)] = '\0';
+    target[cur] = '\0';
     res = minInt(res, strlen(target));
     return res;
 }

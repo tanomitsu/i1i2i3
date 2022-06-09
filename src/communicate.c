@@ -11,6 +11,7 @@
 #include <unistd.h>
 
 #include "chatQueue.h"
+#include "command.h"
 #include "connect.h"
 #include "fft.h"
 #include "visualize.h"
@@ -131,11 +132,19 @@ int sendChat(void *arg) {
         } else if ((int)c == 13) {
             pthread_mutex_lock(mutex);
             cmd[cmdIndex++] = '\0';
-            // 入力した文字を送信
-            ChatItem sendItem = (ChatItem){.next = NULL};
-            copyString(sendItem.content, cmd);
-            copyString(sendItem.senderName, state->myName);
-            send(s, &sendItem, sizeof(ChatItem), 0);
+
+            // interpret command and choose action
+            int startPos = 0;
+            // send input string
+            Action action = interpretCommand(cmd, &startPos);
+            if (action == SEND_CHAT) {
+                ChatItem sendItem = (ChatItem){.next = NULL};
+                copyString(sendItem.content, cmd);
+                copyString(sendItem.senderName, state->myName);
+                send(s, &sendItem, sizeof(ChatItem), 0);
+            } else if (action == CHANGE_NAME) {
+                copyString(state->myName, cmd + startPos);
+            }
             cmdIndex = 0;
             memset(cmd, 0, COMMAND_LEN);
             pthread_mutex_unlock(mutex);
