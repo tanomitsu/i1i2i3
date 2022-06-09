@@ -25,3 +25,7 @@ void ifft(complex double* y, complex double* x, long n);
 int pow2check(long N);
 
 void print_complex(FILE* wp, complex double* Y, long n);
+
+void remove_small_sound(complex double *Y, long n);
+
+void band_pass_filter(complex double *Y, long n);

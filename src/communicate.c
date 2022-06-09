@@ -78,14 +78,14 @@ int call(int s) {
         send(s, sendY, sendNum * sizeof(complex double), 0);
 
         // receive sound
-        int recvNum = recv(s, &recvBeforeY[cnt], sizeof(complex double) * BUFSIZE, 0);
+        int recvNum = recv(s, recvBeforeY[cnt], sizeof(complex double) * BUFSIZE, 0);
         for (int i=0; i<BUFSIZE; i++) {
             //recvBeforeY[cnt][i] -= (recvBeforeY[(cnt+1)%33][i]*rate + recvBeforeY[(cnt+2)%33][i]*(1-rate));
         }
         // double rmax=0;
         // for (int i = 0; i < BUFSIZE; i++){if(cabs(recvBeforeY[i]) > rmax)rmax=cabs(recvBeforeY[i]);}
 
-        ifft(recvBeforeY, recvBeforeX, BUFSIZE);
+        ifft(recvBeforeY[cnt], recvBeforeX, BUFSIZE);
         complex_to_sample(recvBeforeX, recvBuf, BUFSIZE);
         fwrite(recvBuf, sizeof(short), BUFSIZE, soundOut);
     }
