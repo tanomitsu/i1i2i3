@@ -53,16 +53,17 @@ int call(int s) {
         
         double maxAmp=0;
         int maxHz=-1;
-        // for (int i = 0; i < BUFSIZE; i++){
-        //     if(cabs(sendY[i]) > maxAmp){
-        //         maxAmp=cabs(sendY[i]);
-        //         maxHz=i;
-        //     }
-        // }
-        // if(maxAmp>10000){
-        //     for (int i = 0; i < BUFSIZE; i++)sendY[i]=0;
-        //     maxAmp=-1;
-        // }
+        for (int i = 0; i < BUFSIZE; i++){
+            if(cabs(sendY[i]) > maxAmp){
+                maxAmp=cabs(sendY[i]);
+                maxHz=i;
+            }
+        }
+        printf("%d %f\n", maxHz, maxAmp);
+        if(maxAmp>5000){
+            for (int i = 0; i < BUFSIZE; i++)sendY[i]=0;
+            maxAmp=-1;
+        }
         // else{
         //     if(pastAmp[maxHz]<0)pastAmp[maxHz]=maxAmp;
         //     else{
