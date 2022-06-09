@@ -106,6 +106,12 @@ int sendChat(void *arg) {
     char *cmd = props.inputString;
     ChatQueue *q = props.q;
 
+    DisplayProps _displayProps = (DisplayProps){
+        .inputString = cmd,
+        .mutex = mutex,
+        .q = q,
+    };
+
     int cmdIndex = 0;
     char c;
     for (;;) {
@@ -116,6 +122,13 @@ int sendChat(void *arg) {
             *stopProgram = 1;  // end program
             pthread_mutex_unlock(mutex);
             break;
+        } else if ((int)c == 127) {
+            // back space
+            if (cmdIndex > 0) {
+                pthread_mutex_lock(mutex);
+                cmd[--cmdIndex] = '\0';
+                pthread_mutex_unlock(mutex);
+            }
         } else if ((int)c == 13) {
             pthread_mutex_lock(mutex);
             cmd[cmdIndex++] = '\0';
@@ -127,8 +140,10 @@ int sendChat(void *arg) {
         } else {
             pthread_mutex_lock(mutex);
             cmd[cmdIndex++] = c;
+            cmd[cmdIndex] = '\0';
             pthread_mutex_unlock(mutex);
         }
+        display(_displayProps);
         if (*stopProgram) break;
     }
     return 1;

@@ -6,7 +6,6 @@
 #include "chatQueue.h"
 
 void display(DisplayProps prop) {
-    pthread_mutex_lock(prop.mutex);
     ChatItem* cur = prop.q->front;
 
     // 画面を更新
@@ -18,6 +17,6 @@ void display(DisplayProps prop) {
     }
     for (int i = 0; i < CHAT_MAX - prop.q->size; i++) printf("\r\n");
     printf("-----------------------\r\n");
-    pthread_mutex_unlock(prop.mutex);
+    printf("> %s_\r\n", prop.inputString);
     return;
 }

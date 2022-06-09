@@ -18,9 +18,9 @@ int main(int argc, char **argv) {
     int call_s = -1;
     int chat_s = -1;
     int state_s = -1;
-    const int callPort = 55556;
-    const int chatPort = 55557;
-    const int statePort = 55558;
+    const int callPort = 55551;
+    const int chatPort = 55552;
+    const int statePort = 55553;
     char stopProgram = 0;
     char *ip;
     char cmd[COMMAND_LEN];
