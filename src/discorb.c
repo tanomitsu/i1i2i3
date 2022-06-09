@@ -19,12 +19,12 @@ int main(int argc, char **argv) {
     int call_s = -1;
     int chat_s = -1;
     int state_s = -1;
-    const int callPort = 55550;
-    const int chatPort = 55551;
-    const int statePort = 55552;
+    const int callPort = 55553;
+    const int chatPort = 55554;
+    const int statePort = 55555;
     char stopProgram = 0;
     char *ip;
-    State state = (State){.myName = "guest"};
+    State state = (State){.myName = "guest", .isMeMuted = 0};
     memset(state.cmd, 0, COMMAND_LEN * sizeof(char));
     state.q = createChatQueue();
     ConnectMode connectMode;

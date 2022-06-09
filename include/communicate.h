@@ -9,6 +9,7 @@ typedef struct state {
     char myName[NAME_LEN];
     char cmd[COMMAND_LEN];
     ChatQueue *q;
+    unsigned char isMeMuted;
 } State;
 
 // sへのポインタを引数にとり、通話を行う

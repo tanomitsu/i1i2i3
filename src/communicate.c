@@ -145,6 +145,8 @@ int sendChat(void *arg) {
                 send(s, &sendItem, sizeof(ChatItem), 0);
             } else if (action == CHANGE_NAME) {
                 copyString(state->myName, cmd + startPos);
+            } else if (action == TOGGLE_MUTE) {
+                state->isMeMuted = 1 - state->isMeMuted;
             }
             cmdIndex = 0;
             memset(cmd, 0, COMMAND_LEN);
