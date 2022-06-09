@@ -69,29 +69,28 @@ int call(int s) {
         }
         double pastProduct=0;
         for (int i = 0; i < BUFSIZE; i++)pastProduct+=creal(pastsend[cnt][i])*creal(pastsend[cnt][i])+cimag(pastsend[cnt][i])*cimag(pastsend[cnt][i]);
+        double pastProduct31=0;
+        for (int i = 0; i < BUFSIZE; i++)pastProduct31+=creal(pastsend[(cnt+1)%cycle][i])*creal(pastsend[(cnt+1)%cycle][i])+cimag(pastsend[(cnt+1)%cycle][i])*cimag(pastsend[(cnt+1)%cycle][i]);
         double Product=0;//32 cycle mae
         for (int i = 0; i < BUFSIZE; i++)Product+=creal(sendY[i])*creal(pastsend[cnt][i])+cimag(sendY[i])*cimag(pastsend[cnt][i]);
-        double ProductPast=0;// 31 cycle mae
-        for (int i = 0; i < BUFSIZE; i++)ProductPast+=creal(sendY[i])*creal(pastsend[(cnt+1)%cycle][i])+cimag(sendY[i])*cimag(pastsend[(cnt+1)%cycle][i]);
-        if(pastProduct>0.1){
-            double r=Product/pastProduct;
-            double rNext=ProductPast/pastProduct;
-            if(r>rNext && r>0.5){
-                for (int i = 0; i < BUFSIZE; i++){
-                    sendY[i]-=pastsend[cnt][i]*r;
-                    pastsend[cnt][i]=sendY[i];
-                }
-            }
-            else if(rNext>r &&rNext>0.5){
-                for (int i = 0; i < BUFSIZE; i++){
-                    sendY[i]-=pastsend[(cnt+1)%cycle][i]*rNext;
-                    pastsend[(cnt+1)%cycle][i]=sendY[i];
-                }
-                cnt=(cnt+1)%cycle;
-            }
-            //printf("%f\n", r);
+        double Product31=0;// 31 cycle mae
+        for (int i = 0; i < BUFSIZE; i++)Product31+=creal(sendY[i])*creal(pastsend[(cnt+1)%cycle][i])+cimag(sendY[i])*cimag(pastsend[(cnt+1)%cycle][i]);
+        
+        double r=0;
+        if(pastProduct>0.1)r=Product/pastProduct;
+        double r31=0;
+        if(pastProduct31>0.1)r31=Product31/pastProduct31;
+        if(abs(r)>abs(r31) && r>0.5){
+            for (int i = 0; i < BUFSIZE; i++)sendY[i]-=pastsend[cnt][i]*r;
         }
-        for(int i = 0; i < BUFSIZE; i++)printf("%f\n", cabs(sendY[i]));
+        else if(abs(r31)>abs(r)&& r31>0.5){
+            for (int i = 0; i < BUFSIZE; i++)sendY[i]-=pastsend[(cnt+1)%cycle][i]*r31;
+            cnt=(cnt+1)%cycle;
+        }
+        for (int i = 0; i < BUFSIZE; i++)pastsend[cnt][i]=sendY[i];
+        printf("%f %f\n", r,r31);
+        
+        //for(int i = 0; i < BUFSIZE; i++)printf("%f\n", cabs(sendY[i]));
         // else{
         //     if(pastAmp[maxHz]<0)pastAmp[maxHz]=maxAmp;
         //     else{
