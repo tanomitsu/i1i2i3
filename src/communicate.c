@@ -32,7 +32,7 @@ int call(int s) {
     int cycle = 32;
     complex double pastsend[cycle][BUFSIZE];
     int cnt = 0;
-    float rate = 0.5;
+    //float rate = 0.5;
     // initialize
     for (int i = 0; i < BUFSIZE; i++) recvY[i] = 0.0;
     for (int j = 0; j < cycle; j++) {
@@ -104,10 +104,7 @@ int call(int s) {
 
         // receive sound
         int recvNum = recv(s, recvY, sizeof(complex double) * BUFSIZE, 0);
-        for (int i = 0; i < BUFSIZE; i++) {
-            // recvBeforeY[cnt][i] -= (recvBeforeY[(cnt+1)%33][i]*rate +
-            // recvBeforeY[(cnt+2)%33][i]*(1-rate));
-        }
+        if(recvNum==0)break;
         ifft(recvY, recvX, BUFSIZE);
         complex_to_sample(recvX, recvBuf, BUFSIZE);
         fwrite(recvBuf, sizeof(short), BUFSIZE, soundOut);
