@@ -81,18 +81,10 @@ int call(int s) {
         double r31 = 0;
         if (pastProduct31 > 0.1) r31 = Product31 / pastProduct31;
         if (abs(r) >= abs(r31) && abs(r) > 0.1) {
-            for (int i = 0; i < BUFSIZE; i++){
-                double complex diff=pastsend[cnt][i] * r;
-                pastsend[cnt][i] = sendY[i];
-                sendY[i] -= diff;
-            }
+            for (int i = 0; i < BUFSIZE; i++)sendY[i]-=pastsend[cnt][i] * r;
         } else if (abs(r31) > abs(r) && abs(r31) > 0.1) {
             cnt = (cnt + 1) % cycle;
-            for (int i = 0; i < BUFSIZE; i++){
-                double complex diff=pastsend[cnt][i] * r31;
-                pastsend[cnt][i] = sendY[i];
-                sendY[i] -= diff;
-            }
+            for (int i = 0; i < BUFSIZE; i++)sendY[i]-=pastsend[cnt][i] * r31;
         }
         for(int i=0;i<30; i++)printf("%f\n", cabs(pastsend[cnt][i]));
         cnt = (cnt + 1) % cycle;
