@@ -31,9 +31,18 @@ void display(DisplayProps prop) {
         printCount++;
     }
     printf("-------------------------------------------\r\n");
-    printf("[%s] > %s_\r\n", state->myName, prop.inputString);
-    printf("MUTE: %s\r\n",
-           (state->isMeMuted ? "\x1b[32mEnabled\x1b[39m"
-                             : "\x1b[31mDisabled	\x1b[39m"));
+    printf("[\e[92m%s\e[39m] > ", state->myName);
+    // printf("%s\e[92m|\e[39m\r\n", prop.inputString);
+    for (int i = 0; i < CHAT_LEN; i++) {
+        if (i == state->curPos) printf("\e[92m|\e[39m");
+        if (prop.inputString[i] == '\0') break;
+        putchar(prop.inputString[i]);
+    }
+    if (state->curPos == -1) {
+        // empty string
+
+    } else {
+    }
+    printf("%s\r\n", (state->isMeMuted ? "\e[91mMUTED\e[39m" : "     "));
     return;
 }

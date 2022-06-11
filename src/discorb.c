@@ -24,7 +24,8 @@ int main(int argc, char **argv) {
     const int statePort = 55555;
     char stopProgram = 0;
     char *ip;
-    State state = (State){.myName = "guest", .isMeMuted = 0, .scrolledUp = 0};
+    State state = (State){
+        .myName = "guest", .isMeMuted = 0, .scrolledUp = 0, .curPos = 0};
     memset(state.cmd, 0, COMMAND_LEN * sizeof(char));
     state.q = createChatQueue();
     ConnectMode connectMode;

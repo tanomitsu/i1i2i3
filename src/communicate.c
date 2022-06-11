@@ -123,19 +123,19 @@ int sendChat(void *arg) {
             if (cmdIndex > 0) {
                 pthread_mutex_lock(mutex);
                 cmd[--cmdIndex] = '\0';
+                state->curPos--;
                 pthread_mutex_unlock(mutex);
             }
         } else if (c == 13) {
             // enter key
             pthread_mutex_lock(mutex);
-            cmd[cmdIndex++] = '\0';
-
             // interpret command and choose action
             int startPos = 0;
             // send input string
             Action action = interpretCommand(cmd, &startPos);
             if (action == SEND_CHAT) {
                 ChatItem sendItem = (ChatItem){.next = NULL};
+                state->curPos = 0;
                 copyString(sendItem.content, cmd);
                 copyString(sendItem.senderName, state->myName);
                 send(s, &sendItem, sizeof(ChatItem), 0);
@@ -163,7 +163,7 @@ int sendChat(void *arg) {
                 // UP key
                 if (state->scrolledUp + CHAT_MAX < state->q->size) {
                     pthread_mutex_lock(mutex);
-                    state->scrolledUp += 1;
+                    state->scrolledUp++;
                     pthread_mutex_unlock(mutex);
                 }
             }
@@ -171,13 +171,45 @@ int sendChat(void *arg) {
                 // DOWN key
                 if (state->scrolledUp > 0) {
                     pthread_mutex_lock(mutex);
-                    state->scrolledUp -= 1;
+                    state->scrolledUp--;
+                    pthread_mutex_unlock(mutex);
+                }
+            }
+            if (c == 67) {
+                // RIGHT key
+                if (cmdIndex < strlen(cmd) && state->curPos < strlen(cmd)) {
+                    pthread_mutex_lock(mutex);
+                    cmdIndex++;
+                    state->curPos++;
+                    pthread_mutex_unlock(mutex);
+                }
+            }
+            if (c == 68) {
+                // LEFT key
+                if (cmdIndex > 0 && state->curPos > 0) {
+                    pthread_mutex_lock(mutex);
+                    cmdIndex--;
+                    state->curPos--;
                     pthread_mutex_unlock(mutex);
                 }
             }
         } else {
             pthread_mutex_lock(mutex);
-            cmd[cmdIndex++] = c;
+            if (cmd[cmdIndex] != '\0') {
+                // insert
+                char c1 = c;
+                char c2 = cmd[cmdIndex];
+                for (int i = cmdIndex; i < CHAT_LEN - 1; i++) {
+                    cmd[i] = c1;
+                    if (c1 == '\0') break;
+                    c1 = c2;
+                    c2 = cmd[i + 1];
+                }
+            } else {
+                cmd[cmdIndex] = c;
+            }
+            state->curPos++;
+            cmdIndex++;
             pthread_mutex_unlock(mutex);
         }
         display(_displayProps);

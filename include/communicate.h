@@ -18,6 +18,7 @@ typedef struct state {
     unsigned char isMeMuted;
     int scrolledUp;  // how many scrolled
     Threads threads;
+    int curPos;  // chat cur's position
 } State;
 
 // sへのポインタを引数にとり、通話を行う
