@@ -29,12 +29,14 @@ int chatPushBack(ChatQueue *q, char *content, char *senderName) {
 
     if (q->size > 0) {
         // queue alredy has chatItems
+        new->prev = q->back;
         q->back->next = new;
         q->back = new;
         q->size += 1;
         return 0;
     } else {
         // queue doesn't have any ChatItem
+        new->prev = NULL;
         q->front = new;
         q->back = new;
         q->size += 1;
@@ -46,6 +48,7 @@ int chatPushBack(ChatQueue *q, char *content, char *senderName) {
 int chatPopFront(ChatQueue *q) {
     if (q->size == 0) return 1;
     ChatItem *poppedItem = q->front;
+    q->front->next->prev = NULL;
     q->front = q->front->next;
     free(poppedItem);
     q->size -= 1;
@@ -62,4 +65,18 @@ int copyString(char *target, const char *src) {
     target[cur] = '\0';
     res = minInt(res, strlen(target));
     return res;
+}
+
+void clearQueue(ChatQueue *q) {
+    ChatItem *cur1 = q->front;
+    ChatItem *cur2;
+    while (cur1 != NULL) {
+        cur2 = cur1->next;
+        free(cur1);
+        cur1 = cur2;
+    }
+    q->back = NULL;
+    q->front = NULL;
+    q->size = 0;
+    return;
 }

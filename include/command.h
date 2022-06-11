@@ -15,6 +15,7 @@ typedef enum action {
     SEND_CHAT,
     TOGGLE_MUTE,
     CHANGE_NAME,
+    CLEAR_CHAT,
 } Action;
 
 /*

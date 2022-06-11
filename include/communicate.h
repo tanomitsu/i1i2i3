@@ -10,6 +10,7 @@ typedef struct state {
     char cmd[COMMAND_LEN];
     ChatQueue *q;
     unsigned char isMeMuted;
+    int scrolledUp; // how many scrolled
 } State;
 
 // sへのポインタを引数にとり、通話を行う

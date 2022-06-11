@@ -14,6 +14,10 @@ Action interpretCommand(char *cmd, int *startPos) {
             *startPos = check;
             return TOGGLE_MUTE;
         }
+        if ((check = checkCommand(cmd, "clear")) >= 0) {
+            *startPos = check;
+            return CLEAR_CHAT;
+        }
         return SEND_CHAT;
     } else
         return SEND_CHAT;

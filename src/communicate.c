@@ -123,14 +123,14 @@ int sendChat(void *arg) {
             *stopProgram = 1;  // end program
             pthread_mutex_unlock(mutex);
             break;
-        } else if ((int)c == 127) {
+        } else if (c == 127) {
             // back space
             if (cmdIndex > 0) {
                 pthread_mutex_lock(mutex);
                 cmd[--cmdIndex] = '\0';
                 pthread_mutex_unlock(mutex);
             }
-        } else if ((int)c == 13) {
+        } else if (c == 13) {
             pthread_mutex_lock(mutex);
             cmd[cmdIndex++] = '\0';
 
@@ -147,10 +147,33 @@ int sendChat(void *arg) {
                 copyString(state->myName, cmd + startPos);
             } else if (action == TOGGLE_MUTE) {
                 state->isMeMuted = 1 - state->isMeMuted;
+            } else if (action == CLEAR_CHAT) {
+                state->scrolledUp = 0;
+                clearQueue(state->q);
             }
             cmdIndex = 0;
             memset(cmd, 0, COMMAND_LEN);
             pthread_mutex_unlock(mutex);
+        } else if (c == 27) {
+            // arrow keys
+            c = getchar();
+            c = getchar();
+            if (c == 65) {
+                // UP key
+                if (state->scrolledUp + CHAT_MAX < state->q->size) {
+                    pthread_mutex_lock(mutex);
+                    state->scrolledUp += 1;
+                    pthread_mutex_unlock(mutex);
+                }
+            }
+            if (c == 66) {
+                // DOWN key
+                if (state->scrolledUp > 0) {
+                    pthread_mutex_lock(mutex);
+                    state->scrolledUp -= 1;
+                    pthread_mutex_unlock(mutex);
+                }
+            }
         } else {
             pthread_mutex_lock(mutex);
             cmd[cmdIndex++] = c;
@@ -186,10 +209,9 @@ int recvChat(void *arg) {
         int recvNum = recv(s, &recvItem, sizeof(ChatItem), 0);
         if (recvNum == 0) die("thread/recvChat");
 
-        // chatのqueueにpushするが、長さが5を超えた場合5に揃える
+        // chatのqueueにpushする
         pthread_mutex_lock(mutex);
         chatPushBack(q, recvItem.content, recvItem.senderName);
-        if (q->size > CHAT_MAX) chatPopFront(q);
         pthread_mutex_unlock(mutex);
         display(_displayProps);
         if (*stopProgram) break;

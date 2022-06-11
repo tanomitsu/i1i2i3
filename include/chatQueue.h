@@ -17,6 +17,7 @@ struct chatitem {
     char content[CHAT_LEN];
     char senderName[NAME_LEN];
     ChatItem *next;
+    ChatItem *prev;
 };
 
 /*
@@ -43,3 +44,8 @@ int chatPopFront(ChatQueue *q);
 文字列をコピーできるだけコピーし、コピーした文字数を返す関数
 */
 int copyString(char *target, const char *src);
+
+/*
+キューを空にする
+*/
+void clearQueue(ChatQueue *q);
