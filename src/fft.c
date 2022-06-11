@@ -6,11 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
-void die(char* s) {
-    perror(s);
-    exit(1);
-}
+#include <util.h>
 
 /* fd から 必ず n バイト読み, bufへ書く.
 n バイト未満でEOFに達したら, 残りは0で埋める.

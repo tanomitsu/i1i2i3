@@ -10,13 +10,13 @@ LDFLAGS = -L$(LIBDIR)
 LDLIBS = -lfft
 
 SRC = $(SRCDIR)/discorb.c
-OBJ = $(SRCDIR)/fft.o $(SRCDIR)/connect.o $(SRCDIR)/communicate.o
-LIB = $(LIBDIR)/libfft.a $(LIBDIR)/libconnect.a $(LIBDIR)/libcommunicate.a
+OBJ = $(SRCDIR)/fft.o $(SRCDIR)/connect.o $(SRCDIR)/communicate.o $(SRCDIR)/util.o $(SRCDIR)/visualize.o $(SRCDIR)/chatQueue.o $(SRCDIR)/command.o
+LIB = $(LIBDIR)/libfft.a $(LIBDIR)/libconnect.a $(LIBDIR)/libcommunicate.a $(LIBDIR)/libutil.a $(LIBDIR)/visualize.a $(LIBDIR)/chatQueue.a $(LIBDIR)/command.a
 
 TARGET = $(BINDIR)/discorb.out
 
 $(TARGET): $(SRC) $(LIB)
-	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS) $(LDLIBS) -lm
+	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS) $(LDLIBS) -lm -pthread
 
 $(LIB): $(OBJ)
 	$(AR) rsv $@ $^
