@@ -111,7 +111,7 @@ void print_complex(FILE* wp, complex double* Y, long n) {
 }
 
 void remove_small_sound(complex double *Y, long n) {
-    for (int i = 0; i < n; i++){if(cabs(Y[i])<50)Y[i]=0;}
+    for (int i = 0; i < n; i++){if(cabs(Y[i])<100)Y[i]=0;}
 }
 
 void band_pass_filter(complex double *Y, long n) {
@@ -122,10 +122,10 @@ void band_pass_filter(complex double *Y, long n) {
             double r_f=(1500-f)*(1500-f)/490000.0;
             Y[i]*=r_f;
         }
-        else if(f<200){
-            double r_f=f/200.0;
-            Y[i]*=r_f;
-        }
+        // else if(f<200){
+        //     double r_f=f/200.0;
+        //     Y[i]*=r_f;
+        // }
     }
 }
 

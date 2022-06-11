@@ -56,19 +56,6 @@ int call(int s) {
         remove_small_sound(sendY, BUFSIZE);
         band_pass_filter(sendY, BUFSIZE);
 
-        double maxAmp = 0;
-        int maxHz = -1;
-        for (int i = 0; i < BUFSIZE; i++) {
-            if (cabs(sendY[i]) > maxAmp) {
-                maxAmp = cabs(sendY[i]);
-                maxHz = i;
-            }
-        }
-        // printf("%d %f\n", maxHz, maxAmp);
-        if (maxAmp > 5000) {
-            // for (int i = 0; i < BUFSIZE; i++)sendY[i]=0;
-            // maxAmp=-1;
-        }
         double pastProduct = 0;
         for (int i = 0; i < BUFSIZE; i++)
             pastProduct += creal(pastsend[cnt][i]) * creal(pastsend[cnt][i]) +
@@ -93,29 +80,34 @@ int call(int s) {
         if (pastProduct > 0.1) r = Product / pastProduct;
         double r31 = 0;
         if (pastProduct31 > 0.1) r31 = Product31 / pastProduct31;
-        if (abs(r) > abs(r31) && abs(r) > 0.5) {
-            for (int i = 0; i < BUFSIZE; i++) sendY[i] -= pastsend[cnt][i] * r;
-        } else if (abs(r31) > abs(r) && abs(r31) > 0.5) {
-            for (int i = 0; i < BUFSIZE; i++)
-                sendY[i] -= pastsend[(cnt + 1) % cycle][i] * r31;
+        if (abs(r) >= abs(r31) && abs(r) > 0.1) {
+            for (int i = 0; i < BUFSIZE; i++){
+                double complex diff=pastsend[cnt][i] * r;
+                pastsend[cnt][i] = sendY[i];
+                sendY[i] -= diff;
+            }
+        } else if (abs(r31) > abs(r) && abs(r31) > 0.1) {
             cnt = (cnt + 1) % cycle;
+            for (int i = 0; i < BUFSIZE; i++){
+                double complex diff=pastsend[cnt][i] * r31;
+                pastsend[cnt][i] = sendY[i];
+                sendY[i] -= diff;
+            }
         }
-        for (int i = 0; i < BUFSIZE; i++) pastsend[cnt][i] = sendY[i];
-        printf("%f %f\n", r, r31);
-
-        // for(int i = 0; i < BUFSIZE; i++)printf("%f\n", cabs(sendY[i]));
-        //  else{
-        //      if(pastAmp[maxHz]<0)pastAmp[maxHz]=maxAmp;
-        //      else{
-        //          if(maxAmp>pastAmp[maxHz] && maxAmp>5000){
-        //              for (int i = 0; i < BUFSIZE; i++)sendY[i]*=0.5;
-        //              maxAmp*=0.5;
-        //          }
-        //          else pastAmp[maxHz]=maxAmp;
-        //      }
-        //  }
+        for(int i=0;i<30; i++)printf("%f\n", cabs(pastsend[cnt][i]));
         cnt = (cnt + 1) % cycle;
-        // for(int i=0;i<BUFSIZE; i++)printf("%f\n", cabs(sendY[i]));
+        for(int i=0;i<30; i++)printf("%f\n", cabs(sendY[i]));
+
+        // double maxAmp = 0;
+        // int maxHz = -1;
+        // for (int i = 0; i < BUFSIZE; i++) {
+        //     if (cabs(sendY[i]) > maxAmp) {
+        //         maxAmp = cabs(sendY[i]);
+        //         maxHz = i;
+        //     }
+        // }
+        // printf("%d %f\n", maxHz, maxAmp);
+        
         send(s, sendY, sendNum * sizeof(complex double), 0);
 
         // receive sound
