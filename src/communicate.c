@@ -22,7 +22,6 @@ int call(void *arg) {
     int s = props.s;
     pthread_mutex_t *mutex = props.mutex;
     const double ratio = 0.;
-    State *state = props.state;
 
     // start recording
     FILE *soundIn = popen("rec -t raw -b 16 -c 1 -e s -r 44100 -", "r");
