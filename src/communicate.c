@@ -22,15 +22,12 @@ int call(void *arg) {
     int s = props.s;
     pthread_mutex_t *mutex = props.mutex;
     const double ratio = 0.;
+    State *state = props.state;
 
     // start recording
     FILE *soundIn = popen("rec -t raw -b 16 -c 1 -e s -r 44100 -", "r");
     FILE *soundOut =
         popen("play -t raw -b 16 -c 1 -e s -r 44100 - 2> bin/err.out", "w");
-
-    // after the client has connected
-    fprintf(stderr, "A client has connected to your port.\n");
-    fprintf(stderr, "Input what you want to send.\n");
 
     // definition of variables
     short sendBuf[BUFSIZE];
@@ -83,7 +80,6 @@ int call(void *arg) {
         fft(recvBeforeX, recvBeforeY, BUFSIZE);
         pthread_mutex_lock(mutex);
     }
-    fprintf(stderr, "Ended connection.\n");
     pclose(soundIn);
     pclose(soundOut);
     return 0;
@@ -229,8 +225,7 @@ int recvChat(void *arg) {
     display(_displayProps);
     for (;;) {
         ChatItem recvItem;
-        int recvNum = recv(s, &recvItem, sizeof(ChatItem), 0);
-        if (recvNum == 0) die("thread/recvChat");
+        recv(s, &recvItem, sizeof(ChatItem), 0);
 
         // chatのqueueにpushする
         pthread_mutex_lock(mutex);
@@ -245,13 +240,12 @@ int sendRcvState(void *arg) {
     SendRcvStateProps props = *((SendRcvStateProps *)arg);
     int s = props.s;
     State *state = props.state;
-    char *stopProgram = props.stopProgram;
-    char end = 1;
     for (;;) {
         CallState sendData = (CallState){.stopProgram = *props.stopProgram};
-        if (*stopProgram) {
+        if (*props.stopProgram) {
             system("/bin/stty cooked");
-            send(s, &end, sizeof(char), 0);
+            send(s, &sendData, sizeof(CallState), 0);
+            system("clear");
             sleep(1);
             pthread_cancel(*state->threads.recvChatThread);
             pthread_cancel(*state->threads.sendChatThread);
@@ -262,10 +256,10 @@ int sendRcvState(void *arg) {
         }
 
         CallState recvData;
-        char rcvStopProgram;
-        recv(s, &rcvStopProgram, sizeof(char), 0);
-        if (rcvStopProgram) {
+        recv(s, &recvData, sizeof(CallState), 0);
+        if (recvData.stopProgram) {
             system("/bin/stty cooked");
+            system("clear");
             // end program
             pthread_cancel(*state->threads.recvChatThread);
             pthread_cancel(*state->threads.sendChatThread);

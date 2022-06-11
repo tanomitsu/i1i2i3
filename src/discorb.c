@@ -25,7 +25,11 @@ int main(int argc, char **argv) {
     char stopProgram = 0;
     char *ip;
     State state = (State){
-        .myName = "guest", .isMeMuted = 0, .scrolledUp = 0, .curPos = 0};
+        .myName = "guest",
+        .isMeMuted = 0,
+        .scrolledUp = 0,
+        .curPos = 0,
+    };
     memset(state.cmd, 0, COMMAND_LEN * sizeof(char));
     state.q = createChatQueue();
     ConnectMode connectMode;

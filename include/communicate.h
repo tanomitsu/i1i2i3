@@ -3,7 +3,9 @@
 #define COMMAND_LEN 1024
 
 #include <pthread.h>
-#include <visualize.h>
+#include <stdio.h>
+
+#include "visualize.h"
 
 typedef struct threads Threads;
 typedef struct state State;
