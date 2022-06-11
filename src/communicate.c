@@ -21,6 +21,7 @@ int call(void *arg) {
     CallProps props = *((CallProps *)arg);
     int s = props.s;
     pthread_mutex_t *mutex = props.mutex;
+    State *state = props.state;
     const double ratio = 0.;
 
     // start recording
@@ -61,6 +62,10 @@ int call(void *arg) {
         complex_to_sample(sendX, sendBuf, BUFSIZE);
 
         // send data
+        if (state->isMeMuted) {
+            // if MUTE, dont send anything
+            for (int i = 0; i < BUFSIZE; i++) sendBuf[i] = 0;
+        }
         send(s, sendBuf, sendNum * sizeof(short), 0);
 
         // receive sound
