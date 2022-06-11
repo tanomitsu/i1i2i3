@@ -56,14 +56,7 @@ int call(void *arg) {
         for (int i = 0; i < BUFSIZE; i++) {
             if (cabs(sendY[i]) > maxAmp) maxAmp = cabs(sendY[i]);
         }
-        /*
-        for (int i = 0; i < BUFSIZE; i++) sendY[i] = sendY[i] / maxAmp *
-        5000;
-        for (int i = 0; i < BUFSIZE; i++) {
-            double f = i / (double)BUFSIZE * 44100;
-            if (f < 20 || f > 5000) sendY[i] = 0;
-        }
-        */
+
         ifft(sendY, sendX, BUFSIZE);
         complex_to_sample(sendX, sendBuf, BUFSIZE);
 
@@ -110,7 +103,11 @@ int sendChat(void *arg) {
             // backspace key
             if (cmdIndex > 0) {
                 pthread_mutex_lock(mutex);
-                cmd[--cmdIndex] = '\0';
+                for (int i = cmdIndex - 1; i < COMMAND_LEN - 1; i++) {
+                    cmd[i] = cmd[i + 1];
+                    if (cmd[i + 1] == '\0') break;
+                }
+                cmdIndex--;
                 state->curPos--;
                 pthread_mutex_unlock(mutex);
             }
