@@ -5,12 +5,19 @@
 #include <pthread.h>
 #include <visualize.h>
 
+typedef struct threads {
+    pthread_t *callThread;
+    pthread_t *sendChatThread;
+    pthread_t *recvChatThread;
+} Threads;
+
 typedef struct state {
     char myName[NAME_LEN];
     char cmd[COMMAND_LEN];
     ChatQueue *q;
     unsigned char isMeMuted;
-    int scrolledUp; // how many scrolled
+    int scrolledUp;  // how many scrolled
+    Threads threads;
 } State;
 
 // sへのポインタを引数にとり、通話を行う

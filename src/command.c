@@ -18,6 +18,10 @@ Action interpretCommand(char *cmd, int *startPos) {
             *startPos = check;
             return CLEAR_CHAT;
         }
+        if ((check = checkCommand(cmd, "quit")) >= 0) {
+            *startPos = check;
+            return QUIT_PROGRAM;
+        }
         return SEND_CHAT;
     } else
         return SEND_CHAT;

@@ -114,6 +114,9 @@ int main(int argc, char **argv) {
 
     // set up multi thread
     pthread_t callThread, sendChatThread, recvChatThread;
+    state.threads.callThread = &callThread;
+    state.threads.sendChatThread = &sendChatThread;
+    state.threads.recvChatThread = &recvChatThread;
     int callRet =
         pthread_create(&callThread, NULL, (void *)&call, (void *)&_callProps);
     int sendChatRet = pthread_create(&sendChatThread, NULL, (void *)&sendChat,
@@ -128,9 +131,9 @@ int main(int argc, char **argv) {
 
     // multi thread後片付け
     pthread_mutex_destroy(&mutex);
-    pthread_join(callThread, NULL);
-    pthread_join(sendChatThread, NULL);
     pthread_join(recvChatThread, NULL);
+    pthread_join(sendChatThread, NULL);
+    pthread_join(callThread, NULL);
     close(call_s);
     close(chat_s);
     close(state_s);

@@ -118,19 +118,15 @@ int sendChat(void *arg) {
     for (;;) {
         c = getchar();
         printf("\033[1K \033[1K");
-        if (c == ':') {
-            pthread_mutex_lock(mutex);
-            *stopProgram = 1;  // end program
-            pthread_mutex_unlock(mutex);
-            break;
-        } else if (c == 127) {
-            // back space
+        if (c == 127) {
+            // backspace key
             if (cmdIndex > 0) {
                 pthread_mutex_lock(mutex);
                 cmd[--cmdIndex] = '\0';
                 pthread_mutex_unlock(mutex);
             }
         } else if (c == 13) {
+            // enter key
             pthread_mutex_lock(mutex);
             cmd[cmdIndex++] = '\0';
 
@@ -150,6 +146,11 @@ int sendChat(void *arg) {
             } else if (action == CLEAR_CHAT) {
                 state->scrolledUp = 0;
                 clearQueue(state->q);
+            } else if (action == QUIT_PROGRAM) {
+                pthread_mutex_unlock(mutex);
+                pthread_cancel(*state->threads.recvChatThread);
+                pthread_cancel(*state->threads.sendChatThread);
+                pthread_cancel(*state->threads.callThread);
             }
             cmdIndex = 0;
             memset(cmd, 0, COMMAND_LEN);
