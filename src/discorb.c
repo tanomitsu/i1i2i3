@@ -113,28 +113,54 @@ int main(int argc, char **argv) {
         .state = &state,
     };
 
+    SendStateProps _sendStateProps = (SendStateProps){
+        .s = state_s,
+        .stopProgram = &stopProgram,
+        .mutex = &mutex,
+        .state = &state,
+    };
+
+    RecvStateProps _recvStateProps = (RecvStateProps){
+        .s = state_s,
+        .stopProgram = &stopProgram,
+        .mutex = &mutex,
+        .state = &state,
+    };
+
     // set up multi thread
-    pthread_t callThread, sendChatThread, recvChatThread;
+    pthread_t callThread, sendChatThread, recvChatThread, sendStateThread,
+        recvStateThread;
     state.threads.callThread = &callThread;
     state.threads.sendChatThread = &sendChatThread;
     state.threads.recvChatThread = &recvChatThread;
+    state.threads.sendStateThread = &sendStateThread;
+    state.threads.recvStateThread = &recvStateThread;
+
     int callRet =
         pthread_create(&callThread, NULL, (void *)&call, (void *)&_callProps);
     int sendChatRet = pthread_create(&sendChatThread, NULL, (void *)&sendChat,
                                      (void *)&_sendChatProps);
     int recvChatRet = pthread_create(&recvChatThread, NULL, (void *)&recvChat,
                                      (void *)&_recvChatProps);
+    int sendStateRet = pthread_create(
+        &sendStateThread, NULL, (void *)&sendState, (void *)&_sendStateProps);
+    int recvStateRet = pthread_create(
+        &recvStateThread, NULL, (void *)&recvState, (void *)&_recvStateProps);
 
     // error handling
     if (callRet != 0) die("thread/call");
     if (sendChatRet != 0) die("thread/sendChat");
     if (recvChatRet != 0) die("thread/recvChat");
+    if (sendStateRet != 0) die("thread/sendState");
+    if (recvStateRet != 0) die("thread/recvState");
 
     // multi thread後片付け
     pthread_mutex_destroy(&mutex);
     pthread_join(recvChatThread, NULL);
     pthread_join(sendChatThread, NULL);
     pthread_join(callThread, NULL);
+    pthread_join(sendStateThread, NULL);
+    pthread_join(recvStateThread, NULL);
     close(call_s);
     close(chat_s);
     close(state_s);
