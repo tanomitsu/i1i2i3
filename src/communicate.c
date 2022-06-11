@@ -84,7 +84,6 @@ int call(void *arg) {
         pthread_mutex_lock(mutex);
     }
     fprintf(stderr, "Ended connection.\n");
-    system("/bin/stty cooked");
     pclose(soundIn);
     pclose(soundOut);
     return 0;
@@ -129,7 +128,6 @@ int sendChat(void *arg) {
             Action action = interpretCommand(cmd, &startPos);
             if (action == SEND_CHAT) {
                 ChatItem sendItem = (ChatItem){.next = NULL};
-                state->curPos = 0;
                 copyString(sendItem.content, cmd);
                 copyString(sendItem.senderName, state->myName);
                 send(s, &sendItem, sizeof(ChatItem), 0);
@@ -145,6 +143,7 @@ int sendChat(void *arg) {
                 pthread_mutex_unlock(mutex);
             }
             cmdIndex = 0;
+            state->curPos = 0;
             memset(cmd, 0, COMMAND_LEN);
             pthread_mutex_unlock(mutex);
         } else if (c == 27) {
@@ -242,44 +241,36 @@ int recvChat(void *arg) {
     return 0;
 }
 
-int sendState(void *arg) {
-    SendStateProps props = *((SendStateProps *)arg);
+int sendRcvState(void *arg) {
+    SendRcvStateProps props = *((SendRcvStateProps *)arg);
     int s = props.s;
     State *state = props.state;
+    char *stopProgram = props.stopProgram;
+    char end = 1;
     for (;;) {
         CallState sendData = (CallState){.stopProgram = *props.stopProgram};
-        if (*props.stopProgram) {
+        if (*stopProgram) {
             system("/bin/stty cooked");
-            send(s, props.stopProgram, sizeof(char), 0);
+            send(s, &end, sizeof(char), 0);
+            sleep(1);
             pthread_cancel(*state->threads.recvChatThread);
             pthread_cancel(*state->threads.sendChatThread);
-            pthread_cancel(*state->threads.recvStateThread);
             pthread_cancel(*state->threads.callThread);
-            pthread_cancel(*state->threads.sendStateThread);
+            pthread_cancel(*state->threads.stateThread);
         } else {
             send(s, props.stopProgram, sizeof(char), 0);
         }
-    }
-}
 
-int recvState(void *arg) {
-    RecvStateProps props = *((RecvStateProps *)arg);
-    int s = props.s;
-    State *state = props.state;
-    for (;;) {
         CallState recvData;
         char rcvStopProgram;
-        // recv(s, &recvData, sizeof(CallState), 0);
         recv(s, &rcvStopProgram, sizeof(char), 0);
-        // printf("rcv: %d\r\n", rcvStopProgram);
         if (rcvStopProgram) {
             system("/bin/stty cooked");
             // end program
             pthread_cancel(*state->threads.recvChatThread);
             pthread_cancel(*state->threads.sendChatThread);
             pthread_cancel(*state->threads.callThread);
-            pthread_cancel(*state->threads.sendStateThread);
-            pthread_cancel(*state->threads.recvStateThread);
+            pthread_cancel(*state->threads.stateThread);
         }
     }
 }

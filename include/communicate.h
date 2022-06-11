@@ -13,8 +13,7 @@ struct threads {
     pthread_t *callThread;
     pthread_t *sendChatThread;
     pthread_t *recvChatThread;
-    pthread_t *sendStateThread;
-    pthread_t *recvStateThread;
+    pthread_t *stateThread;
 };
 
 struct state {
@@ -41,9 +40,7 @@ int sendChat(void *arg);
 
 int recvChat(void *arg);
 
-int sendState(void *arg);
-
-int recvState(void *arg);
+int sendRcvState(void *arg);
 
 typedef struct callProps {
     int s;
@@ -66,16 +63,9 @@ typedef struct recvChatProps {
     State *state;
 } RecvChatProps;
 
-typedef struct sendStateProps {
+typedef struct sendRcvStateProps {
     int s;
     char *stopProgram;
     pthread_mutex_t *mutex;
     State *state;
-} SendStateProps;
-
-typedef struct recvStateProps {
-    int s;
-    char *stopProgram;
-    pthread_mutex_t *mutex;
-    State *state;
-} RecvStateProps;
+} SendRcvStateProps;

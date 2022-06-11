@@ -19,9 +19,9 @@ int main(int argc, char **argv) {
     int call_s = -1;
     int chat_s = -1;
     int state_s = -1;
-    const int callPort = 55553;
-    const int chatPort = 55554;
-    const int statePort = 55555;
+    const int callPort = 55555;
+    const int chatPort = 55556;
+    const int statePort = 55557;
     char stopProgram = 0;
     char *ip;
     State state = (State){
@@ -113,14 +113,7 @@ int main(int argc, char **argv) {
         .state = &state,
     };
 
-    SendStateProps _sendStateProps = (SendStateProps){
-        .s = state_s,
-        .stopProgram = &stopProgram,
-        .mutex = &mutex,
-        .state = &state,
-    };
-
-    RecvStateProps _recvStateProps = (RecvStateProps){
+    SendRcvStateProps _sendRcvStateProps = (SendRcvStateProps){
         .s = state_s,
         .stopProgram = &stopProgram,
         .mutex = &mutex,
@@ -128,13 +121,11 @@ int main(int argc, char **argv) {
     };
 
     // set up multi thread
-    pthread_t callThread, sendChatThread, recvChatThread, sendStateThread,
-        recvStateThread;
+    pthread_t callThread, sendChatThread, recvChatThread, sendRcvStateThread;
     state.threads.callThread = &callThread;
     state.threads.sendChatThread = &sendChatThread;
     state.threads.recvChatThread = &recvChatThread;
-    state.threads.sendStateThread = &sendStateThread;
-    state.threads.recvStateThread = &recvStateThread;
+    state.threads.stateThread = &sendRcvStateThread;
 
     int callRet =
         pthread_create(&callThread, NULL, (void *)&call, (void *)&_callProps);
@@ -142,25 +133,22 @@ int main(int argc, char **argv) {
                                      (void *)&_sendChatProps);
     int recvChatRet = pthread_create(&recvChatThread, NULL, (void *)&recvChat,
                                      (void *)&_recvChatProps);
-    int sendStateRet = pthread_create(
-        &sendStateThread, NULL, (void *)&sendState, (void *)&_sendStateProps);
-    int recvStateRet = pthread_create(
-        &recvStateThread, NULL, (void *)&recvState, (void *)&_recvStateProps);
+    int sendRcvStateRet =
+        pthread_create(&sendRcvStateThread, NULL, (void *)&sendRcvState,
+                       (void *)&_sendRcvStateProps);
 
     // error handling
     if (callRet != 0) die("thread/call");
     if (sendChatRet != 0) die("thread/sendChat");
     if (recvChatRet != 0) die("thread/recvChat");
-    if (sendStateRet != 0) die("thread/sendState");
-    if (recvStateRet != 0) die("thread/recvState");
+    if (sendRcvStateRet != 0) die("thread/sendState");
 
     // multi thread後片付け
     pthread_mutex_destroy(&mutex);
     pthread_join(recvChatThread, NULL);
     pthread_join(sendChatThread, NULL);
     pthread_join(callThread, NULL);
-    pthread_join(sendStateThread, NULL);
-    pthread_join(recvStateThread, NULL);
+    pthread_join(sendRcvStateThread, NULL);
     close(call_s);
     close(chat_s);
     close(state_s);

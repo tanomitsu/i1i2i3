@@ -32,17 +32,12 @@ void display(DisplayProps prop) {
     }
     printf("-------------------------------------------\r\n");
     printf("[\e[92m%s\e[39m] > ", state->myName);
-    // printf("%s\e[92m|\e[39m\r\n", prop.inputString);
     for (int i = 0; i < CHAT_LEN; i++) {
         if (i == state->curPos) printf("\e[92m|\e[39m");
         if (prop.inputString[i] == '\0') break;
         putchar(prop.inputString[i]);
     }
-    if (state->curPos == -1) {
-        // empty string
-
-    } else {
-    }
+    printf("\r\n");
     printf("%s\r\n", (state->isMeMuted ? "\e[91mMUTED\e[39m" : "     "));
     return;
 }
