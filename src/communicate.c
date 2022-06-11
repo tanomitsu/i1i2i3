@@ -43,7 +43,7 @@ int call(void *arg) {
 
     // double pastAmp[47];//BPF(50-2000)なのでindex(2-46)
     // for(int i=0;i<47;i++)pastAmp[i] = -1;
-
+    FILE* fp=fopen("recv1.txt","w");
     for (;;) {
         // mic input
         int sendNum = fread(sendBuf, sizeof(short), BUFSIZE, soundIn);
@@ -58,7 +58,7 @@ int call(void *arg) {
         fft(sendX, sendY, BUFSIZE);
         remove_small_sound(sendY, BUFSIZE);
         band_pass_filter(sendY, BUFSIZE);
-
+        /*
         double pastProduct = 0;
         for (int i = 0; i < BUFSIZE; i++)
             pastProduct += creal(pastsend[cnt][i]) * creal(pastsend[cnt][i]) +
@@ -86,13 +86,43 @@ int call(void *arg) {
         if (abs(r) >= abs(r31) && abs(r) > 0.1) {
             for (int i = 0; i < BUFSIZE; i++) sendY[i] -= pastsend[cnt][i] * r;
         } else if (abs(r31) > abs(r) && abs(r31) > 0.1) {
+            for (int i = 0; i < BUFSIZE; i++)sendY[i] -= pastsend[(cnt+1)%cycle][i] * r31;
+            //for(int i = 0; i < BUFSIZE; i++)pastsend[cnt][i] =sendY[i];
             cnt = (cnt + 1) % cycle;
-            for (int i = 0; i < BUFSIZE; i++)
-                sendY[i] -= pastsend[cnt][i] * r31;
         }
-        // for (int i = 0; i < 30; i++) printf("%f\n", cabs(pastsend[cnt][i]));
+        for(int i = 0; i < BUFSIZE; i++)pastsend[cnt][i] =sendY[i];
+        */
+       for(int i = 0; i < BUFSIZE; i++){
+            double pastProduct = creal(pastsend[cnt][i]) * creal(pastsend[cnt][i]) +
+                           cimag(pastsend[cnt][i]) * cimag(pastsend[cnt][i]);
+            /*double pastProduct31 = creal(pastsend[(cnt + 1) % cycle][i]) *
+                                 creal(pastsend[(cnt + 1) % cycle][i]) +
+                             cimag(pastsend[(cnt + 1) % cycle][i]) *
+                                 cimag(pastsend[(cnt + 1) % cycle][i]);*/
+            //32 cycle mae
+            double Product = creal(sendY[i]) * creal(pastsend[cnt][i]) +
+                       cimag(sendY[i]) * cimag(pastsend[cnt][i]);
+            //31 cycle mae
+            /*double Product31 = creal(sendY[i]) * creal(pastsend[(cnt + 1) % cycle][i]) +
+                cimag(sendY[i]) * cimag(pastsend[(cnt + 1) % cycle][i]);*/
+
+            //pastProduct==0ならskip
+            double r =(pastProduct > 0.1) ? Product / pastProduct : 0;
+            /*double r31 = (pastProduct31 > 0.1) ? Product31 / pastProduct31 : 0;
+            if (abs(r) >= abs(r31) && abs(r) > 0.1) {
+                sendY[i] -= pastsend[cnt][i] * r;
+            } else if (abs(r31) > abs(r) && abs(r31) > 0.1) {
+                sendY[i] -= pastsend[cnt][i] * r31;
+                //cnt = (cnt + 1) % cycle;
+            }*/
+            if(abs(r)>0.01){
+                sendY[i] -= pastsend[cnt][i]*r;
+            }
+            pastsend[cnt][i] =sendY[i];
+        }
+        for (int i = 0; i < 30; i++) fprintf(fp,"%f\n", cabs(pastsend[cnt][i]));
         cnt = (cnt + 1) % cycle;
-        // for (int i = 0; i < 30; i++) printf("%f\n", cabs(sendY[i]));
+        for (int i = 0; i < 30; i++) fprintf(fp, "%f\n", cabs(sendY[i]));
 
         ifft(sendY, sendX, BUFSIZE);
         complex_to_sample(sendX, sendBuf, BUFSIZE);
