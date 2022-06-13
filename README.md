@@ -15,6 +15,11 @@ make
 ```console
 ./bin/discorb.out
 ```
+または
+```
+python3 GUI.py
+```
+でGUI
 
 ## 使い方
 - `/name [名前]`: 任意の名前に変更する
