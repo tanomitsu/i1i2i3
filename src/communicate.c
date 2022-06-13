@@ -35,7 +35,6 @@ int call(void *arg) {
     int cycle = 32;
     short pastsend[cycle][BUFSIZE];
     int cnt = 0;
-    // float rate = 0.5;
     //  initialize
     for (int j = 0; j < cycle; j++) {
         for (int i = 0; i < BUFSIZE; i++) pastsend[j][i] = 0;
@@ -56,86 +55,8 @@ int call(void *arg) {
         fft(sendX, sendY, BUFSIZE);
         remove_small_sound(sendY, BUFSIZE);
         band_pass_filter(sendY, BUFSIZE);
-        /*
-        double pastProduct = 0;
-        for (int i = 0; i < BUFSIZE; i++)
-            pastProduct += creal(pastsend[cnt][i]) * creal(pastsend[cnt][i]) +
-                           cimag(pastsend[cnt][i]) * cimag(pastsend[cnt][i]);
-        double pastProduct31 = 0;
-        for (int i = 0; i < BUFSIZE; i++)
-            pastProduct31 += creal(pastsend[(cnt + 1) % cycle][i]) *
-                                 creal(pastsend[(cnt + 1) % cycle][i]) +
-                             cimag(pastsend[(cnt + 1) % cycle][i]) *
-                                 cimag(pastsend[(cnt + 1) % cycle][i]);
-        double Product = 0;  // 32 cycle mae
-        for (int i = 0; i < BUFSIZE; i++)
-            Product += creal(sendY[i]) * creal(pastsend[cnt][i]) +
-                       cimag(sendY[i]) * cimag(pastsend[cnt][i]);
-        double Product31 = 0;  // 31 cycle mae
-        for (int i = 0; i < BUFSIZE; i++)
-            Product31 +=
-                creal(sendY[i]) * creal(pastsend[(cnt + 1) % cycle][i]) +
-                cimag(sendY[i]) * cimag(pastsend[(cnt + 1) % cycle][i]);
-
-        double r = 0;
-        if (pastProduct > 0.1) r = Product / pastProduct;
-        double r31 = 0;
-        if (pastProduct31 > 0.1) r31 = Product31 / pastProduct31;
-        if (abs(r) >= abs(r31) && abs(r) > 0.1) {
-            for (int i = 0; i < BUFSIZE; i++) sendY[i] -= pastsend[cnt][i] * r;
-        } else if (abs(r31) > abs(r) && abs(r31) > 0.1) {
-            for (int i = 0; i < BUFSIZE; i++)sendY[i] -= pastsend[(cnt+1)%cycle][i] * r31;
-            //for(int i = 0; i < BUFSIZE; i++)pastsend[cnt][i] =sendY[i];
-            cnt = (cnt + 1) % cycle;
-        }
-        for(int i = 0; i < BUFSIZE; i++)pastsend[cnt][i] =sendY[i];
-        */ 
-    //    for(int i = 0; i < BUFSIZE; i++){
-    //         double pastProduct = creal(pastsend[cnt][i]) * creal(pastsend[cnt][i]) +
-    //                        cimag(pastsend[cnt][i]) * cimag(pastsend[cnt][i]);
-    //         double pastProduct31 = creal(pastsend[(cnt + 1) % cycle][i]) *
-    //                              creal(pastsend[(cnt + 1) % cycle][i]) +
-    //                          cimag(pastsend[(cnt + 1) % cycle][i]) *
-    //                              cimag(pastsend[(cnt + 1) % cycle][i]);
-    //         //32 cycle mae
-    //         double Product = creal(sendY[i]) * creal(pastsend[cnt][i]) +
-    //                    cimag(sendY[i]) * cimag(pastsend[cnt][i]);
-    //         //31 cycle mae
-    //         double Product31 = creal(sendY[i]) * creal(pastsend[(cnt + 1) % cycle][i]) +
-    //             cimag(sendY[i]) * cimag(pastsend[(cnt + 1) % cycle][i]);
-
-    //         //pastProduct==0ならskip
-    //         double r =(pastProduct > 0.1) ? Product / pastProduct : 0;
-    //         double r31 = (pastProduct31 > 0.1) ? Product31 / pastProduct31 : 0;
-    //         if (abs(r) >= abs(r31) && abs(r) > 0.1) {
-    //             sendY[i] -= pastsend[cnt][i] * r;
-    //         } else if (abs(r31) > abs(r) && abs(r31) > 0.1) {
-    //             sendY[i] -= pastsend[cnt][i] * r31;
-    //             cnt = (cnt + 1) % cycle;
-    //         }
-    //         pastsend[cnt][i] =sendY[i];
-    //     }
-        // for(int i=0;i < BUFSIZE; i++)fprintf(fp, "%f %f\n",creal(sendY[i]), cimag(sendY[i]));
-        // cnt = (cnt + 1) % cycle;
         ifft(sendY, sendX, BUFSIZE);
         complex_to_sample(sendX, sendBuf, BUFSIZE);
-        // int maxHz=0;
-        // int maxAmp=0;
-        // for(int i=0;i<BUFSIZE;i++){
-        //     if(sendBuf[i]>maxAmp){
-        //         maxAmp=sendBuf[i];
-        //         maxHz=i;
-        //     }
-        // }
-        // int maxHzP=0;
-        // int maxAmpP=0;
-        // for(int i=0;i<BUFSIZE*2;i++){
-        //     if(pastsend[cnt+i/BUFSIZE][i%BUFSIZE]>maxAmpP){
-        //         maxAmpP=pastsend[(cnt+i/BUFSIZE)%cycle][i%BUFSIZE];
-        //         maxHzP=i;
-        //     }
-        // }
-        // //double r=(maxHzP>0.1 &&maxHz>0.1)?maxHz/maxHzP:0;
         int Cxx=0;
         int Cxy=0;
         for(int i=0;i<BUFSIZE;i++){
@@ -157,7 +78,6 @@ int call(void *arg) {
             for(int i=0;i<BUFSIZE;i++)sendBuf[i]-=(short)pastsend[cnt][i]*r;
         }
         for(int i=0;i<BUFSIZE;i++)pastsend[cnt][i]=sendBuf[i];
-        //for(int i=0;i<BUFSIZE; i++)fprintf(fp, "%d\n", sendBuf[i]);
         cnt= (cnt + 1) % cycle;
 
         // send data

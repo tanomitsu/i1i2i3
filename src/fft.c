@@ -106,58 +106,20 @@ void print_complex(FILE* wp, complex double* Y, long n) {
     }
 }
 
-void remove_small_sound(complex double *Y, long n) {
-    for (int i = 0; i < n; i++){if(cabs(Y[i])<100)Y[i]=0;}
+void remove_small_sound(complex double* Y, long n) {
+    for (int i = 0; i < n; i++) {
+        if (cabs(Y[i]) < 100) Y[i] = 0;
+    }
 }
 
-void band_pass_filter(complex double *Y, long n) {
-    for(int i = 0; i < n; i++) {
+void band_pass_filter(complex double* Y, long n) {
+    for (int i = 0; i < n; i++) {
         double f = i / (double)n * 44100;
-        if (f < 50 || f > 1500) Y[i] = 0;
-        else if(f>800){
-            double r_f=(1500-f)*(1500-f)/490000.0;
-            Y[i]*=r_f;
+        if (f < 50 || f > 1500)
+            Y[i] = 0;
+        else if (f > 800) {
+            double r_f = (1500 - f) * (1500 - f) / 490000.0;
+            Y[i] *= r_f;
         }
-        // else if(f<200){
-        //     double r_f=f/200.0;
-        //     Y[i]*=r_f;
-        // }
     }
 }
-
-/*
-int main(int argc, char** argv) {
-    (void)argc;
-    long n = atol(argv[1]);
-    if (!pow2check(n)) {
-        fprintf(stderr, "error : n (%ld) not a power of two\n", n);
-        exit(1);
-    }
-    FILE* wp = fopen("fft.dat", "wb");
-    if (wp == NULL) die("fopen");
-    sample_t* buf = calloc(sizeof(sample_t), n);
-    complex double* X = calloc(sizeof(complex double), n);
-    complex double* Y = calloc(sizeof(complex double), n);
-    while (1) {
-        // 標準入力からn個標本を読む
-        ssize_t m = read_n(0, n * sizeof(sample_t), buf);
-        if (m == 0) break;
-        // 複素数の配列に変換
-        sample_to_complex(buf, X, n);
-        // FFT -> Y
-        fft(X, Y, n);
-
-        print_complex(wp, Y, n);
-        fprintf(wp, "----------------\n");
-
-        // IFFT -> Z
-        ifft(Y, X, n);
-        // 標本の配列に変換
-        complex_to_sample(X, buf, n);
-        // 標準出力へ出力
-        write_n(1, m, buf);
-    }
-    fclose(wp);
-    return 0;
-}
-*/
