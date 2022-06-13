@@ -115,7 +115,8 @@ int call(void *arg) {
     //         }
     //         pastsend[cnt][i] =sendY[i];
     //     }
-    //    cnt = (cnt + 1) % cycle;
+        // for(int i=0;i < BUFSIZE; i++)fprintf(fp, "%f %f\n",creal(sendY[i]), cimag(sendY[i]));
+        // cnt = (cnt + 1) % cycle;
         ifft(sendY, sendX, BUFSIZE);
         complex_to_sample(sendX, sendBuf, BUFSIZE);
         // int maxHz=0;
@@ -135,23 +136,29 @@ int call(void *arg) {
         //     }
         // }
         // //double r=(maxHzP>0.1 &&maxHz>0.1)?maxHz/maxHzP:0;
-        // int Cxx=0;
-        // int Cxy=0;
-        // for(int i=0;i<BUFSIZE;i++){
-        //     //sned: maxHz ==past: maxHzP
-        //     int p=i+maxHzP-maxHz;
-        //     if(p<0 || p>2023)continue;
-        //     Cxx+=pastsend[(cnt+p/BUFSIZE)%cycle][p%BUFSIZE]*pastsend[(cnt+p/BUFSIZE)%cycle][p%BUFSIZE];
-        //     Cxy+=sendBuf[i]*sendBuf[i];
-        // }
-        // double r=(Cxx>0.1)?Cxy/Cxx:0;
-        // for(int i=0;i<BUFSIZE;i++){
-        //     int p=i+maxHzP-maxHz;
-        //     sendBuf[i]-=(int)r*pastsend[(cnt+p/BUFSIZE)%cycle][p%BUFSIZE];
-        //     pastsend[(cnt+p/BUFSIZE)%cycle][p%BUFSIZE] =sendBuf[i];
-        // }
-        // for(int i=0;i<BUFSIZE; i++)fprintf(fp, "%f\n", r);
-        // cnt= (cnt + 1) % cycle;
+        int Cxx=0;
+        int Cxy=0;
+        for(int i=0;i<BUFSIZE;i++){
+            Cxx+=pastsend[cnt][i]*pastsend[cnt][i];
+            Cxy+=pastsend[cnt][i] * sendBuf[i];
+        }
+        double r=(Cxx>0.1)?Cxy/Cxx:0;
+        Cxx=0; Cxy=0;
+        for(int i=0;i<BUFSIZE;i++){
+            Cxx+=pastsend[(cnt+1)%cycle][i]*pastsend[(cnt+1)%cycle][i];
+            Cxy+=pastsend[(cnt+1)%cycle][i] * sendBuf[i];
+        }
+        double r31=(Cxx>0.1)?Cxy/Cxx:0;
+        if(abs(r)>abs(r31) && abs(r)>0.5){
+            for(int i=0;i<BUFSIZE;i++)sendBuf[i]-=(short)pastsend[cnt][i]*r;
+        }
+        if(abs(r31)>abs(r) && abs(r31)>0.5){
+            cnt= (cnt + 1) % cycle;
+            for(int i=0;i<BUFSIZE;i++)sendBuf[i]-=(short)pastsend[cnt][i]*r;
+        }
+        for(int i=0;i<BUFSIZE;i++)pastsend[cnt][i]=sendBuf[i];
+        for(int i=0;i<BUFSIZE; i++)fprintf(fp, "%d\n", sendBuf[i]);
+        cnt= (cnt + 1) % cycle;
 
         // send data
         if (state->isMeMuted) {
