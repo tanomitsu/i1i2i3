@@ -77,14 +77,17 @@ int call(void *arg) {
             cnt= (cnt + 1) % cycle;
             for(int i=0;i<BUFSIZE;i++)sendBuf[i]-=(short)pastsend[cnt][i]*r;
         }
-        for(int i=0;i<BUFSIZE;i++)pastsend[cnt][i]=sendBuf[i];
-        cnt= (cnt + 1) % cycle;
 
-        // send data
+        // set all the data to zero if muted
         if (state->isMeMuted) {
             // if MUTE, dont send anything
             for (int i = 0; i < BUFSIZE; i++) sendBuf[i] = 0;
         }
+
+        for(int i=0;i<BUFSIZE;i++)pastsend[cnt][i]=sendBuf[i];
+        cnt= (cnt + 1) % cycle;
+
+        // send data
         send(s, sendBuf, sendNum * sizeof(short), 0);
 
         // receive sound

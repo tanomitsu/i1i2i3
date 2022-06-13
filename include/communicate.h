@@ -18,13 +18,16 @@ struct threads {
     pthread_t *stateThread;
 };
 
+/*
+複数スレッドで共有される、現在の状態を保存するための構造体
+*/
 struct state {
     char myName[NAME_LEN];
     char cmd[COMMAND_LEN];
     ChatQueue *q;
-    unsigned char isMeMuted;
+    unsigned char isMeMuted; // ミュートするかどうか
     int scrolledUp;  // how many scrolled
-    Threads threads;
+    Threads threads;    // 終了処理するためにスレッドへのポインターを持っておく
     int curPos;  // chat cur's position
 };
 
