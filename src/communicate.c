@@ -157,7 +157,7 @@ int call(void *arg) {
             for(int i=0;i<BUFSIZE;i++)sendBuf[i]-=(short)pastsend[cnt][i]*r;
         }
         for(int i=0;i<BUFSIZE;i++)pastsend[cnt][i]=sendBuf[i];
-        for(int i=0;i<BUFSIZE; i++)fprintf(fp, "%d\n", sendBuf[i]);
+        //for(int i=0;i<BUFSIZE; i++)fprintf(fp, "%d\n", sendBuf[i]);
         cnt= (cnt + 1) % cycle;
 
         // send data
