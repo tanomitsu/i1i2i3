@@ -16,7 +16,7 @@ make
 ./bin/discorb.out
 ```
 または
-```
+```console
 python3 GUI.py
 ```
 でGUI
