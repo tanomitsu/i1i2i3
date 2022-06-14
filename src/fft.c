@@ -115,7 +115,7 @@ void remove_small_sound(complex double* Y, long n) {
 void band_pass_filter(complex double* Y, long n) {
     for (int i = 0; i < n; i++) {
         double f = i / (double)n * 44100;
-        if (f < 50 || f > 1500)
+        if (f < 50 || f > 2000)
             Y[i] = 0;
         else if (f > 800) {
             double r_f = (1500 - f) * (1500 - f) / 490000.0;

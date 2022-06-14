@@ -14,6 +14,7 @@
 #include "command.h"
 #include "connect.h"
 #include "fft.h"
+#include "math.h"
 #include "visualize.h"
 
 int call(void *arg) {
@@ -57,34 +58,61 @@ int call(void *arg) {
         band_pass_filter(sendY, BUFSIZE);
         ifft(sendY, sendX, BUFSIZE);
         complex_to_sample(sendX, sendBuf, BUFSIZE);
-        int Cxx=0;
-        int Cxy=0;
-        for(int i=0;i<BUFSIZE;i++){
-            Cxx+=pastsend[cnt][i]*pastsend[cnt][i];
-            Cxy+=pastsend[cnt][i] * sendBuf[i];
+        long long Cxx=0;
+        //int Cxy=0;
+        int maxIndex=0;
+        long long maxC=0;
+        for(int i=0; i<BUFSIZE+1; i++){
+            long long C=0;
+            for(int j=0; j<BUFSIZE; j++){
+                C+=pastsend[(cnt+(i+j)/BUFSIZE)%cycle][(i+j)%BUFSIZE] * sendBuf[j];
+            }
+            if(C>maxC){
+                maxC=C;
+                maxIndex=i;
+            }
         }
-        double r=(Cxx>0.1)?Cxy/Cxx:0;
-        Cxx=0; Cxy=0;
-        for(int i=0;i<BUFSIZE;i++){
-            Cxx+=pastsend[(cnt+1)%cycle][i]*pastsend[(cnt+1)%cycle][i];
-            Cxy+=pastsend[(cnt+1)%cycle][i] * sendBuf[i];
+        for(int i=0; i<BUFSIZE; i++){
+            Cxx+=pastsend[((cnt+(maxIndex+i)/BUFSIZE)%cycle)][(maxIndex+i)%BUFSIZE] *pastsend[((cnt+(maxIndex+i)/BUFSIZE)%cycle)][(maxIndex+i)%BUFSIZE];
         }
-        double r31=(Cxx>0.1)?Cxy/Cxx:0;
-        if(abs(r)>abs(r31) && abs(r)>0.5){
-            for(int i=0;i<BUFSIZE;i++)sendBuf[i]-=(short)pastsend[cnt][i]*r;
+        double r=(Cxx>100000)?(double)maxC/Cxx:0;
+        if(r>0.3){
+            for(int i=0;i<BUFSIZE;i++){
+                sendBuf[i]-=(short)(r*pastsend[((cnt+(maxIndex+i)/BUFSIZE)%cycle)][(maxIndex+i)%BUFSIZE]);
+                pastsend[((cnt+(maxIndex+i)/BUFSIZE)%cycle)][(maxIndex+i)%BUFSIZE]=sendBuf[i];
+            }
         }
-        if(abs(r31)>abs(r) && abs(r31)>0.5){
-            cnt= (cnt + 1) % cycle;
-            for(int i=0;i<BUFSIZE;i++)sendBuf[i]-=(short)pastsend[cnt][i]*r;
+        else{
+            for(int i=0; i<BUFSIZE; i++){pastsend[cnt][i]=0;}
+            for(int i=0; i<BUFSIZE; i++){pastsend[(cnt+1)%cycle][i]=sendBuf[i];}
         }
+        // for(int i=0;i<BUFSIZE;i++){
+        //     Cxx+=pastsend[cnt][i]*pastsend[cnt][i];
+        //     Cxy+=pastsend[cnt][i] * sendBuf[i];
+        // }
+        // double r=(Cxx>0.1)?Cxy/Cxx:0;
+        // Cxx=0; Cxy=0;
+        // for(int i=0;i<BUFSIZE;i++){
+        //     Cxx+=pastsend[(cnt+1)%cycle][i]*pastsend[(cnt+1)%cycle][i];
+        //     Cxy+=pastsend[(cnt+1)%cycle][i] * sendBuf[i];
+        // }
+        // double r31=(Cxx>0.1)?Cxy/Cxx:0;
+        // if(abs(r)>abs(r31) && abs(r)>0.5){
+        //     for(int i=0;i<BUFSIZE;i++)sendBuf[i]-=(short)pastsend[cnt][i]*r;
+        // }
+        // if(abs(r31)>abs(r) && abs(r31)>0.5){
+        //     cnt= (cnt + 1) % cycle;
+        //     for(int i=0;i<BUFSIZE;i++)sendBuf[i]-=(short)pastsend[cnt][i]*r;
+        // }
 
         // set all the data to zero if muted
         if (state->isMeMuted) {
             // if MUTE, dont send anything
             for (int i = 0; i < BUFSIZE; i++) sendBuf[i] = 0;
         }
-
-        for(int i=0;i<BUFSIZE;i++)pastsend[cnt][i]=sendBuf[i];
+        for (int i = 0; i < BUFSIZE; i++) fprintf(fp, "%d\n", sendBuf[i]);
+        //fprintf(fp, "xx:%lld xy:%lld %f\n", Cxx, maxC, r);
+        //for(int i=0;i<BUFSIZE;i++)pastsend[cnt][i]=sendBuf[i];
         cnt= (cnt + 1) % cycle;
 
         // send data
