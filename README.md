@@ -16,10 +16,11 @@ make
 ./bin/discorb.out
 ```
 または
-```
+```console
 python3 GUI.py
 ```
-でGUI
+でGUIから実行可能
+(ただし、その場合python3とtkinterがインストールされている必要あり)
 
 ## 使い方
 - `/name [名前]`: 任意の名前に変更する
