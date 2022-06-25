@@ -14,7 +14,8 @@
 #include "fft.h"
 #include "util.h"
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     // connect
     int call_s = -1;
     int chat_s = -1;
@@ -34,35 +35,40 @@ int main(int argc, char **argv) {
     state.q = createChatQueue();
     ConnectMode connectMode;
 
-    if (argc == 1) {
+    if (argc == 1)
+    {
         // server side
         // ./discorb.out
         connectMode = SERVER;
-    } else if (argc == 2) {
+    }
+    else if (argc == 2)
+    {
         // client side
         // ./a.out <IP>
         ip = argv[1];
         connectMode = CLIENT;
-    } else {
+    }
+    else
+    {
         fprintf(stderr, "usage: %s <ip> or %s \n", argv[0], argv[0]);
         exit(1);
     }
 
     // threads for connecting
     pthread_t callConnectThread, chatConnectThread, stateConnectThread;
-    CallConnectProps _CallConnectProps = (CallConnectProps){
+    ConnectThreadProps _CallConnectProps = (ConnectThreadProps){
         .ip = ip,
         .port = callPort,
         .s = &call_s,
         .connectMode = connectMode,
     };
-    ChatConnectProps _ChatConnectProps = (ChatConnectProps){
+    ConnectThreadProps _ChatConnectProps = (ConnectThreadProps){
         .ip = ip,
         .port = chatPort,
         .s = &chat_s,
         .connectMode = connectMode,
     };
-    StateConnectProps _StateConnectProps = (StateConnectProps){
+    ConnectThreadProps _StateConnectProps = (ConnectThreadProps){
         .ip = ip,
         .port = statePort,
         .s = &state_s,
@@ -71,19 +77,22 @@ int main(int argc, char **argv) {
 
     // connect
     int chatConnectRet =
-        pthread_create(&chatConnectThread, NULL, (void *)&chatConnect,
+        pthread_create(&chatConnectThread, NULL, (void *)&connectThread,
                        (void *)&_ChatConnectProps);
     int callConnectRet =
-        pthread_create(&callConnectThread, NULL, (void *)&chatConnect,
+        pthread_create(&callConnectThread, NULL, (void *)&connectThread,
                        (void *)&_CallConnectProps);
     int stateConnectRet =
-        pthread_create(&stateConnectThread, NULL, (void *)&callConnect,
+        pthread_create(&stateConnectThread, NULL, (void *)&connectThread,
                        (void *)&_StateConnectProps);
 
     // error handling for connecting threads
-    if (chatConnectRet != 0) die("thread/chatConnectThread");
-    if (callConnectRet != 0) die("thread/callConnectThread");
-    if (stateConnectRet != 0) die("thread/stateConnectThread");
+    if (chatConnectRet != 0)
+        die("thread/chatConnectThread");
+    if (callConnectRet != 0)
+        die("thread/callConnectThread");
+    if (stateConnectRet != 0)
+        die("thread/stateConnectThread");
 
     // connect用threadを後片付け
     pthread_join(chatConnectThread, NULL);
@@ -142,10 +151,14 @@ int main(int argc, char **argv) {
                        (void *)&_sendRcvStateProps);
 
     // error handling
-    if (callRet != 0) die("thread/call");
-    if (sendChatRet != 0) die("thread/sendChat");
-    if (recvChatRet != 0) die("thread/recvChat");
-    if (sendRcvStateRet != 0) die("thread/sendState");
+    if (callRet != 0)
+        die("thread/call");
+    if (sendChatRet != 0)
+        die("thread/sendChat");
+    if (recvChatRet != 0)
+        die("thread/recvChat");
+    if (sendRcvStateRet != 0)
+        die("thread/sendState");
 
     // multi thread後片付け
     pthread_mutex_destroy(&mutex);

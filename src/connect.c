@@ -66,18 +66,8 @@ int autoConnect(char *ip, int port, ConnectMode connectMode) {
     return -1;
 }
 
-int callConnect(void *arg) {
-    CallConnectProps props = *((CallConnectProps *)arg);
-    char *ip = props.ip;
-    int port = props.port;
-    int *s = props.s;
-    ConnectMode connectMode = props.connectMode;
-    *s = autoConnect(ip, port, connectMode);
-    return 0;
-}
-
-int chatConnect(void *arg) {
-    ChatConnectProps props = *((ChatConnectProps *)arg);
+int connectThread(void *arg) {
+    ConnectThreadProps props = *((ConnectThreadProps *)arg);
     char *ip = props.ip;
     int port = props.port;
     int *s = props.s;
